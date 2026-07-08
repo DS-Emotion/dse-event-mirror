@@ -4,7 +4,7 @@ Tags: events, eventbrite, sync, calendar, mirror
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.8.0
+Stable tag: 0.9.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -42,6 +42,11 @@ The schedule uses WP-Cron by default. For reliable timing on quiet sites, point
 a real server cron job at wp-cron.php (see the setup guide).
 
 == Changelog ==
+
+= 0.9.0 =
+* New: list layout for [event_mirror] (layout="list") and the Events block — full-width event rows with a date rail, Book Now, time range, venue, description and price.
+* New: front-end styles are now override-friendly — no inline styles, single low-specificity classes, and tunable CSS custom properties (--evmr-gap, --evmr-radius, --evmr-card-*, --evmr-list-*) documented in the stylesheet.
+* Change: "How to Display" guide now covers grid, list and calendar views (mobile mockup removed).
 
 = 0.8.0 =
 * New: "Events (grid)" block for the block editor — the block equivalent of the [event_mirror] shortcode, with column/limit/filter controls.

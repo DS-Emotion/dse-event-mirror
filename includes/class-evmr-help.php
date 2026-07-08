@@ -100,10 +100,11 @@ class EVMR_Help {
 						<?php $this->card_close(); ?>
 
 						<?php
-						// ---- Responsive note ----
-						$this->card_open( __( 'Responsive', 'event-mirror' ), __( 'The same grid, on a phone', 'event-mirror' ), __( 'Any column setting collapses to a single column on small screens, so cards never get crushed.', 'event-mirror' ) );
-						echo $this->wire_grid_mobile(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-						echo '<p class="evmr-node__desc">' . esc_html__( 'Nothing to configure — this is automatic.', 'event-mirror' ) . '</p>';
+						// ---- List ----
+						$this->card_open( __( 'Listing', 'event-mirror' ), __( 'Events list', 'event-mirror' ), __( 'Full-width rows, one event after another — date rail, details, Book Now and image. Great for a detailed What\'s On page.', 'event-mirror' ) );
+						echo $this->wire_list(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+						$this->snippet( '[event_mirror layout="list"]' );
+						echo '<p class="evmr-node__desc">' . esc_html__( 'Same filters as the grid (limit, category, tag). Block editor:', 'event-mirror' ) . ' <span class="evmr-chip">' . esc_html__( 'Events (grid) → Layout: List', 'event-mirror' ) . '</span></p>';
 						$this->card_close();
 						?>
 
@@ -200,16 +201,20 @@ class EVMR_Help {
 			. '</svg>';
 	}
 
-	private function wire_grid_mobile() {
-		$mini = function ( $y ) {
-			return '<rect x="132" y="' . $y . '" width="96" height="74" rx="6" class="wf-card"/>'
-				. '<rect x="138" y="' . ( $y + 6 ) . '" width="84" height="34" rx="3" class="wf-img"/>'
-				. '<rect x="138" y="' . ( $y + 46 ) . '" width="60" height="6" rx="3" class="wf-line"/>'
-				. '<rect x="138" y="' . ( $y + 58 ) . '" width="42" height="6" rx="3" class="wf-line"/>';
+	private function wire_list() {
+		$row = function ( $y ) {
+			return '<rect x="8" y="' . $y . '" width="344" height="78" rx="8" class="wf-card"/>'
+				. '<text x="32" y="' . ( $y + 34 ) . '" text-anchor="middle" class="wf-lbl">WED</text>'
+				. '<text x="32" y="' . ( $y + 56 ) . '" text-anchor="middle" class="wf-lbl" font-size="16">8</text>'
+				. '<line x1="58" y1="' . ( $y + 12 ) . '" x2="58" y2="' . ( $y + 66 ) . '" class="wf-grid"/>'
+				. '<rect x="72" y="' . ( $y + 14 ) . '" width="120" height="13" rx="3" class="wf-btn"/>'
+				. '<rect x="72" y="' . ( $y + 34 ) . '" width="84" height="6" rx="3" class="wf-line"/>'
+				. '<rect x="72" y="' . ( $y + 46 ) . '" width="132" height="9" rx="3" class="wf-line"/>'
+				. '<rect x="72" y="' . ( $y + 62 ) . '" width="58" height="6" rx="3" class="wf-line"/>'
+				. '<rect x="250" y="' . ( $y + 10 ) . '" width="96" height="58" rx="4" class="wf-img"/>';
 		};
 		return '<svg class="evmr-wire" viewBox="0 0 360 190" xmlns="http://www.w3.org/2000/svg">'
-			. '<rect x="120" y="8" width="120" height="174" rx="14" class="wf-frame"/>'
-			. $mini( 22 ) . $mini( 100 )
+			. $row( 12 ) . $row( 100 )
 			. '</svg>';
 	}
 

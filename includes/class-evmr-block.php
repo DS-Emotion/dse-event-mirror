@@ -71,6 +71,10 @@ class EVMR_Block {
 				'editor_script'   => 'evmr-grid-block',
 				'render_callback' => array( $this, 'render_grid' ),
 				'attributes'      => array(
+					'layout'   => array(
+						'type'    => 'string',
+						'default' => 'grid',
+					),
 					'columns'  => array(
 						'type'    => 'string',
 						'default' => 'auto',
@@ -105,6 +109,7 @@ class EVMR_Block {
 	 */
 	public function render_grid( $attributes ) {
 		$atts = array(
+			'layout'   => isset( $attributes['layout'] ) ? $attributes['layout'] : 'grid',
 			'columns'  => isset( $attributes['columns'] ) ? $attributes['columns'] : 'auto',
 			'limit'    => isset( $attributes['limit'] ) ? (int) $attributes['limit'] : 12,
 			'upcoming' => ( ! isset( $attributes['upcoming'] ) || $attributes['upcoming'] ) ? 'yes' : 'no',
@@ -165,7 +170,7 @@ class EVMR_Block {
 			: ( get_option( EVMR_OPTION, array() )['cta_text'] ?? __( 'Get tickets', 'event-mirror' ) );
 
 		wp_enqueue_style( 'event-mirror' );
-		return '<div class="evmr-grid" style="display:grid;grid-template-columns:1fr;gap:1.5rem;">'
+		return '<div class="evmr-grid">'
 			. EVMR_Shortcode::card_html( $post_id, $cta, 'evmr-card--horizontal' )
 			. '</div>';
 	}

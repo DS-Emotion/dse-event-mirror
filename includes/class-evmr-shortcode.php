@@ -36,7 +36,8 @@ class EVMR_Shortcode {
 			array(
 				'limit'    => 12,
 				'upcoming' => 'yes',
-				'columns'  => 'auto', // 2 | 3 | auto (responsive).
+				'columns'  => 'auto', // 2 | 3 | auto (responsive). Grid layout only.
+				'layout'   => 'grid', // grid | list (full-width rows).
 				'category' => '',     // evmr_category slug(s), comma-separated.
 				'tag'      => '',     // evmr_tag slug(s), comma-separated.
 			),
@@ -76,18 +77,28 @@ class EVMR_Shortcode {
 		wp_enqueue_style( 'event-mirror' );
 		$cta = $this->default_cta();
 
+		$layout = ( 'list' === strtolower( (string) $atts['layout'] ) ) ? 'list' : 'grid';
+
 		ob_start();
-		$col = preg_replace( '/[^a-z0-9]/', '', strtolower( (string) $atts['columns'] ) );
-		printf(
-			'<div class="evmr-grid evmr-grid--cols-%s" style="%s">',
-			esc_attr( $col ),
-			esc_attr( $this->grid_style() )
-		);
-		while ( $query->have_posts() ) {
-			$query->the_post();
-			echo self::card_html( get_the_ID(), $cta ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		if ( 'list' === $layout ) {
+			echo '<div class="evmr-list">';
+			while ( $query->have_posts() ) {
+				$query->the_post();
+				echo self::list_item_html( get_the_ID(), $cta ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			}
+			echo '</div>';
+		} else {
+			$col = preg_replace( '/[^a-z0-9]/', '', strtolower( (string) $atts['columns'] ) );
+			printf(
+				'<div class="evmr-grid evmr-grid--cols-%s">',
+				esc_attr( $col )
+			);
+			while ( $query->have_posts() ) {
+				$query->the_post();
+				echo self::card_html( get_the_ID(), $cta ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			}
+			echo '</div>';
 		}
-		echo '</div>';
 		wp_reset_postdata();
 		return ob_get_clean();
 	}
@@ -121,7 +132,7 @@ class EVMR_Shortcode {
 		wp_enqueue_style( 'event-mirror' );
 		$cta = '' !== $atts['cta'] ? $atts['cta'] : $this->default_cta();
 
-		return '<div class="evmr-grid" style="' . esc_attr( $this->grid_style() ) . '">'
+		return '<div class="evmr-grid">'
 			. self::card_html( $post_id, $cta, 'evmr-card--horizontal' ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			. '</div>';
 	}
@@ -163,16 +174,6 @@ class EVMR_Shortcode {
 		return ( isset( $settings['cta_text'] ) && '' !== $settings['cta_text'] )
 			? $settings['cta_text']
 			: __( 'Get tickets', 'event-mirror' );
-	}
-
-	/**
-	 * Minimal grid layout. Only display + gap are inlined; the column count is
-	 * left to the stylesheet (keyed off the evmr-grid--cols-* class) so it can
-	 * collapse to a single column on small screens via media queries — an inline
-	 * grid-template-columns could not be overridden responsively.
-	 */
-	private function grid_style() {
-		return 'display:grid;gap:2.5rem 1.5rem;';
 	}
 
 	/**
@@ -238,6 +239,131 @@ class EVMR_Shortcode {
 		</article>
 		<?php
 		return ob_get_clean();
+	}
+
+	/**
+	 * Render one full-width list row (date rail + details + image), used by the
+	 * layout="list" view. Public + static so blocks can reuse it.
+	 *
+	 * @param int    $post_id Post ID.
+	 * @param string $cta     CTA label.
+	 * @return string
+	 */
+	public static function list_item_html( $post_id, $cta ) {
+		$start  = get_post_meta( $post_id, '_evmr_start_utc', true );
+		$url    = get_post_meta( $post_id, '_evmr_url', true );
+		$venue  = get_post_meta( $post_id, '_evmr_venue', true );
+		$image  = get_post_meta( $post_id, '_evmr_image', true );
+		$status = get_post_meta( $post_id, '_evmr_status', true );
+
+		$eyebrow  = self::status_label( $status );
+		$is_dead  = in_array( $status, array( 'canceled', 'cancelled', 'ended', 'completed' ), true );
+		$desc     = wp_trim_words( wp_strip_all_tags( (string) get_post_field( 'post_content', $post_id ) ), 40, '…' );
+		$when     = self::when_range( $post_id );
+		$price    = self::price_label( $post_id );
+		$show_cta = $url && ! $is_dead;
+
+		$dow  = '';
+		$dnum = '';
+		if ( $start ) {
+			$local = get_date_from_gmt( str_replace( array( 'T', 'Z' ), array( ' ', '' ), $start ) );
+			$dow   = mysql2date( 'D', $local );
+			$dnum  = mysql2date( 'j', $local );
+		}
+
+		$item_class = 'evmr-list-item' . ( $image ? '' : ' evmr-list-item--noimg' );
+
+		ob_start();
+		?>
+		<article class="<?php echo esc_attr( $item_class ); ?>">
+			<div class="evmr-list-item__date">
+				<span class="evmr-list-item__dow"><?php echo esc_html( $dow ); ?></span>
+				<span class="evmr-list-item__dnum"><?php echo esc_html( $dnum ); ?></span>
+			</div>
+			<div class="evmr-list-item__body">
+				<?php if ( $show_cta ) : ?>
+					<a class="evmr-list-item__book wp-element-button button" href="<?php echo esc_url( $url ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $cta ); ?></a>
+				<?php endif; ?>
+				<?php if ( $eyebrow ) : ?>
+					<p class="evmr-card__eyebrow"><?php echo esc_html( $eyebrow ); ?></p>
+				<?php endif; ?>
+				<?php if ( $when ) : ?>
+					<p class="evmr-list-item__when"><?php echo esc_html( $when ); ?></p>
+				<?php endif; ?>
+				<h3 class="evmr-list-item__title"><?php echo esc_html( get_the_title( $post_id ) ); ?></h3>
+				<?php if ( $venue ) : ?>
+					<p class="evmr-card__venue"><?php echo esc_html( $venue ); ?></p>
+				<?php endif; ?>
+				<?php if ( $desc ) : ?>
+					<p class="evmr-card__desc"><?php echo esc_html( $desc ); ?></p>
+				<?php endif; ?>
+				<?php if ( $price ) : ?>
+					<p class="evmr-list-item__price"><?php echo esc_html( $price ); ?></p>
+				<?php endif; ?>
+			</div>
+			<?php if ( $image ) : ?>
+				<div class="evmr-list-item__media">
+					<img class="evmr-list-item__image" src="<?php echo esc_url( $image ); ?>" alt="" loading="lazy" />
+				</div>
+			<?php endif; ?>
+		</article>
+		<?php
+		return ob_get_clean();
+	}
+
+	/**
+	 * Human-readable start–end range, e.g. "8 July @ 6:00 pm - 6:45 pm".
+	 *
+	 * @param int $post_id Post ID.
+	 * @return string
+	 */
+	private static function when_range( $post_id ) {
+		$start = get_post_meta( $post_id, '_evmr_start_utc', true );
+		if ( ! $start ) {
+			return '';
+		}
+		$date_fmt = get_option( 'date_format' );
+		$time_fmt = 'g:i a';
+		$start_l  = get_date_from_gmt( str_replace( array( 'T', 'Z' ), array( ' ', '' ), $start ) );
+		$out      = mysql2date( $date_fmt . ' \@ ' . $time_fmt, $start_l );
+
+		$end = get_post_meta( $post_id, '_evmr_end_utc', true );
+		if ( $end ) {
+			$end_l = get_date_from_gmt( str_replace( array( 'T', 'Z' ), array( ' ', '' ), $end ) );
+			if ( mysql2date( 'Y-m-d', $start_l ) === mysql2date( 'Y-m-d', $end_l ) ) {
+				$out .= ' - ' . mysql2date( $time_fmt, $end_l );
+			} else {
+				$out .= ' - ' . mysql2date( $date_fmt . ' \@ ' . $time_fmt, $end_l );
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Price label from the mirrored ticket data ("Free", "From £10", or '').
+	 *
+	 * @param int $post_id Post ID.
+	 * @return string
+	 */
+	private static function price_label( $post_id ) {
+		if ( get_post_meta( $post_id, '_evmr_is_free', true ) ) {
+			return __( 'Free', 'event-mirror' );
+		}
+		$price    = get_post_meta( $post_id, '_evmr_price', true );
+		$currency = get_post_meta( $post_id, '_evmr_currency', true );
+		if ( '' === $price || '' === $currency ) {
+			return '';
+		}
+		$symbols = array(
+			'GBP' => '£',
+			'USD' => '$',
+			'EUR' => '€',
+			'AUD' => 'A$',
+			'CAD' => 'C$',
+		);
+		$sym = isset( $symbols[ $currency ] ) ? $symbols[ $currency ] : ( $currency . ' ' );
+		/* translators: %s: formatted lowest ticket price, e.g. "£10". */
+		return sprintf( __( 'From %s', 'event-mirror' ), $sym . $price );
 	}
 
 	/**

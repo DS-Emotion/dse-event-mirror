@@ -1,11 +1,36 @@
-/* Event Mirror — minimal card layout. Box structure only; colours, fonts and
-   buttons still come from the active theme via CSS variables with fallbacks. */
+/*
+ * Event Mirror — front-end styles.
+ *
+ * BUILT TO BE EASY TO OVERRIDE PER SITE:
+ *  - No inline styles are ever emitted; every rule is a single, low-specificity
+ *    class, so one matching class in your theme always wins.
+ *  - Colours, fonts and buttons inherit from the active theme (theme.json
+ *    presets) with plain fallbacks.
+ *  - Tunable values are exposed as CSS custom properties. Set any of these in
+ *    your theme (on :root, a page wrapper, or a single block) to restyle without
+ *    editing this file or fighting specificity:
+ *
+ *      --evmr-gap                grid spacing              (default: 2.5rem 1.5rem)
+ *      --evmr-list-gap           list row spacing          (default: 1.5rem)
+ *      --evmr-radius             corner radius             (default: 8px)
+ *      --evmr-card-bg            card background            (default: theme base / #fff)
+ *      --evmr-card-border        card border               (default: 1px theme tertiary)
+ *      --evmr-card-shadow        card shadow               (default: subtle)
+ *      --evmr-card-image-ratio   card image aspect ratio   (default: 4 / 3)
+ *      --evmr-list-bg            list row background        (default: theme tertiary tint)
+ *
+ *  Example (in your theme's CSS):
+ *      :root { --evmr-gap: 1rem; --evmr-radius: 0; }
+ *      .evmr-card__title { text-transform: uppercase; }
+ */
 
-/* Grid — mobile-first. Base is a single column so cards never get crushed on
-   phones; the requested column count is applied from a breakpoint up. The
-   "auto" mode is intrinsically responsive and applies at every width. */
+/* Grid — mobile-first: one column, then the requested column count from a
+   min-width breakpoint up. The "auto" mode is intrinsically responsive. No
+   fixed track is emitted inline, so these rules stay overridable. */
 .evmr-grid {
+	display: grid;
 	grid-template-columns: 1fr;
+	gap: var(--evmr-gap, 2.5rem 1.5rem);
 }
 
 .evmr-grid--cols-auto {
@@ -28,16 +53,16 @@
 .evmr-card {
 	display: flex;
 	flex-direction: column;
-	border: 1px solid var(--wp--preset--color--tertiary, rgba(0, 0, 0, 0.12));
-	border-radius: 8px;
+	border: var(--evmr-card-border, 1px solid var(--wp--preset--color--tertiary, rgba(0, 0, 0, 0.12)));
+	border-radius: var(--evmr-radius, 8px);
 	overflow: hidden;
-	background: var(--wp--preset--color--base, #fff);
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+	background: var(--evmr-card-bg, var(--wp--preset--color--base, #fff));
+	box-shadow: var(--evmr-card-shadow, 0 1px 3px rgba(0, 0, 0, 0.08));
 }
 
 .evmr-card__image {
 	width: 100%;
-	aspect-ratio: 4 / 3;
+	aspect-ratio: var(--evmr-card-image-ratio, 4 / 3);
 	object-fit: cover;
 	display: block;
 }
@@ -73,7 +98,7 @@
 	margin: 0;
 }
 
-.evmr-card .evmr-card__cta {
+.evmr-card__cta {
 	margin-top: auto; /* anchor to the bottom so buttons align across a row */
 	align-self: flex-start;
 	font-size: var(--wp--preset--font-size--small, 0.85rem);
@@ -157,4 +182,115 @@
 
 .evmr-calendar__pad {
 	background: rgba(0, 0, 0, 0.02);
+}
+
+/* List view — full-width event rows (layout="list"). */
+.evmr-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--evmr-list-gap, 1.5rem);
+}
+
+.evmr-list-item {
+	display: grid;
+	grid-template-columns: 92px 1fr clamp(220px, 34%, 380px);
+	background: var(--evmr-list-bg, var(--wp--preset--color--tertiary, rgba(0, 0, 0, 0.03)));
+	border-radius: var(--evmr-radius, 12px);
+	overflow: hidden;
+	min-height: 200px;
+}
+
+.evmr-list-item--noimg {
+	grid-template-columns: 92px 1fr;
+}
+
+.evmr-list-item__date {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 1.5rem 0.5rem;
+	text-align: center;
+}
+
+.evmr-list-item__dow {
+	font-size: var(--wp--preset--font-size--small, 0.8rem);
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	opacity: 0.7;
+}
+
+.evmr-list-item__dnum {
+	font-size: 2.1rem;
+	font-weight: 700;
+	line-height: 1.05;
+}
+
+.evmr-list-item__body {
+	display: flex;
+	flex-direction: column;
+	gap: 0.55rem;
+	padding: 1.5rem 1.5rem 1.5rem 1.4rem;
+	border-left: 1px solid var(--wp--preset--color--tertiary, rgba(0, 0, 0, 0.12));
+}
+
+.evmr-list-item__book {
+	align-self: stretch;
+	text-align: center;
+	margin-bottom: 0.35rem;
+	font-size: var(--wp--preset--font-size--small, 0.85rem);
+}
+
+.evmr-list-item__when {
+	font-size: var(--wp--preset--font-size--small, 0.85rem);
+	margin: 0;
+	opacity: 0.85;
+}
+
+.evmr-list-item__title {
+	margin: 0;
+}
+
+.evmr-list-item__price {
+	margin: 0.2rem 0 0;
+	font-weight: 600;
+}
+
+.evmr-list-item__media {
+	position: relative;
+	min-height: 200px;
+}
+
+.evmr-list-item__image {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+/* Stack on narrow screens: date rail on top, image below the details. */
+@media (max-width: 700px) {
+	.evmr-list-item,
+	.evmr-list-item--noimg {
+		grid-template-columns: 1fr;
+	}
+	.evmr-list-item__date {
+		flex-direction: row;
+		gap: 0.5rem;
+		justify-content: flex-start;
+		padding: 1rem 1.25rem 0;
+	}
+	.evmr-list-item__dnum {
+		font-size: 1.4rem;
+	}
+	.evmr-list-item__body {
+		border-left: 0;
+	}
+	.evmr-list-item__media {
+		min-height: 200px;
+		order: 3;
+	}
 }

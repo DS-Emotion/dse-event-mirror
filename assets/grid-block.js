@@ -10,6 +10,7 @@
 		icon: 'grid-view',
 		category: 'widgets',
 		attributes: {
+			layout: { type: 'string', default: 'grid' },
 			columns: { type: 'string', default: 'auto' },
 			limit: { type: 'number', default: 12 },
 			upcoming: { type: 'boolean', default: true },
@@ -18,11 +19,22 @@
 		},
 		edit: function ( props ) {
 			var a = props.attributes;
-			return el(
-				'div',
-				{ style: { padding: '12px', border: '1px solid #dcdcde', borderRadius: '4px' } },
-				el( 'strong', null, 'Event Mirror — events grid' ),
+			var controls = [
+				el( 'strong', { key: 'h' }, 'Event Mirror — events' ),
 				el( SelectControl, {
+					key: 'layout',
+					label: 'Layout',
+					value: a.layout,
+					options: [
+						{ label: 'Grid of cards', value: 'grid' },
+						{ label: 'List (full-width rows)', value: 'list' }
+					],
+					onChange: function ( v ) { props.setAttributes( { layout: v } ); }
+				} )
+			];
+			if ( a.layout !== 'list' ) {
+				controls.push( el( SelectControl, {
+					key: 'columns',
 					label: 'Columns',
 					value: a.columns,
 					options: [
@@ -31,7 +43,12 @@
 						{ label: '3 columns', value: '3' }
 					],
 					onChange: function ( v ) { props.setAttributes( { columns: v } ); }
-				} ),
+				} ) );
+			}
+			return el(
+				'div',
+				{ style: { padding: '12px', border: '1px solid #dcdcde', borderRadius: '4px' } },
+				controls,
 				el( TextControl, {
 					label: 'Number of events',
 					type: 'number',
