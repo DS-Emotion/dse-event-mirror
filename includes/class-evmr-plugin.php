@@ -1,0 +1,97 @@
+<?php
+/**
+ * Main plugin orchestrator.
+ *
+ * @package EventMirror
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * Loads and coordinates every component of the plugin.
+ */
+class EVMR_Plugin {
+
+	/**
+	 * Component instances, keyed by short name.
+	 *
+	 * @var array
+	 */
+	private $components = array();
+
+	/**
+	 * Wire everything up.
+	 */
+	public function __construct() {
+		$this->components['logger']     = new EVMR_Logger();
+		$this->components['cpt']        = new EVMR_CPT();
+		$this->components['settings']   = new EVMR_Settings();
+		$this->components['eventbrite'] = new EVMR_Eventbrite();
+		$this->components['sync']       = new EVMR_Sync(
+			$this->components['eventbrite'],
+			$this->components['logger']
+		);
+		$this->components['cron']      = new EVMR_Cron( $this->components['sync'] );
+		$this->components['shortcode'] = new EVMR_Shortcode();
+		$this->components['block']     = new EVMR_Block();
+		$this->components['calendar']  = new EVMR_Calendar();
+
+		foreach ( $this->components as $component ) {
+			if ( method_exists( $component, 'hooks' ) ) {
+				$component->hooks();
+			}
+		}
+
+		/**
+		 * Fires after Event Mirror has loaded all of its components.
+		 * Pro add-ons should hook here to register their own pieces.
+		 *
+		 * @param EVMR_Plugin $plugin The plugin instance.
+		 */
+		do_action( 'evmr_loaded', $this );
+	}
+
+	/**
+	 * Retrieve a component by short name (e.g. 'sync', 'logger').
+	 *
+	 * @param string $name Component key.
+	 * @return object|null
+	 */
+	public function get( $name ) {
+		return isset( $this->components[ $name ] ) ? $this->components[ $name ] : null;
+	}
+
+	/**
+	 * Activation: register the CPT so rewrite rules exist, then flush.
+	 */
+	public static function activate() {
+		// Ensure the post type is registered before flushing permalinks.
+		( new EVMR_CPT() )->register();
+		flush_rewrite_rules();
+
+		// Seed default settings if none exist.
+		if ( false === get_option( EVMR_OPTION ) ) {
+			add_option(
+				EVMR_OPTION,
+				array(
+					'token'     => '',
+					'frequency' => 'hourly',
+					'cta_text'  => __( 'Get tickets', 'event-mirror' ),
+					'org_id'    => '',
+				)
+			);
+		}
+
+		do_action( 'evmr_activated' );
+	}
+
+	/**
+	 * Deactivation: clear scheduled syncs and flush rewrite rules.
+	 */
+	public static function deactivate() {
+		wp_clear_scheduled_hook( 'evmr_sync_cron' );
+		flush_rewrite_rules();
+
+		do_action( 'evmr_deactivated' );
+	}
+}

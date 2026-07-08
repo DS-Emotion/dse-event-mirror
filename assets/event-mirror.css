@@ -1,0 +1,136 @@
+/* Event Mirror — minimal card layout. Box structure only; colours, fonts and
+   buttons still come from the active theme via CSS variables with fallbacks. */
+
+.evmr-card {
+	display: flex;
+	flex-direction: column;
+	border: 1px solid var(--wp--preset--color--tertiary, rgba(0, 0, 0, 0.12));
+	border-radius: 8px;
+	overflow: hidden;
+	background: var(--wp--preset--color--base, #fff);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.evmr-card__image {
+	width: 100%;
+	aspect-ratio: 4 / 3;
+	object-fit: cover;
+	display: block;
+}
+
+.evmr-card__body {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	gap: 0.7rem;
+	padding: 1rem;
+}
+
+.evmr-card__eyebrow {
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	font-size: var(--wp--preset--font-size--small, 0.8rem);
+	opacity: 0.7;
+	margin: 0;
+}
+
+.evmr-card__title {
+	margin: 0;
+}
+
+.evmr-card__date,
+.evmr-card__venue {
+	font-size: var(--wp--preset--font-size--small, 0.85rem);
+	margin: 0;
+	opacity: 0.85;
+}
+
+.evmr-card__desc {
+	margin: 0;
+}
+
+.evmr-card .evmr-card__cta {
+	margin-top: auto; /* anchor to the bottom so buttons align across a row */
+	align-self: flex-start;
+	font-size: var(--wp--preset--font-size--small, 0.85rem);
+	padding: 0.45em 0.9em;
+}
+
+/* 3-column layout: smaller titles. */
+.evmr-grid--cols-3 .evmr-card__title {
+	font-size: 1.05rem;
+	line-height: 1.3;
+}
+
+/* Featured single card: image left, details right. */
+.evmr-card--horizontal {
+	flex-direction: row;
+}
+
+.evmr-card--horizontal .evmr-card__image {
+	width: 66.6667%;
+	flex: 0 0 66.6667%;
+	height: auto;
+}
+
+.evmr-card--horizontal .evmr-card__body {
+	flex: 1;
+}
+
+@media (max-width: 600px) {
+	.evmr-card--horizontal {
+		flex-direction: column;
+	}
+	.evmr-card--horizontal .evmr-card__image {
+		width: 100%;
+		flex: none;
+	}
+}
+
+/* Event Calendar block. */
+.evmr-calendar__nav {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 0.75rem;
+}
+
+.evmr-calendar {
+	width: 100%;
+	border-collapse: collapse;
+	table-layout: fixed;
+}
+
+.evmr-calendar th,
+.evmr-calendar td {
+	border: 1px solid var(--wp--preset--color--tertiary, rgba(0, 0, 0, 0.12));
+	vertical-align: top;
+	padding: 0.4rem;
+}
+
+.evmr-calendar th {
+	text-align: center;
+	font-size: var(--wp--preset--font-size--small, 0.85rem);
+}
+
+.evmr-calendar td {
+	height: 5.5rem;
+}
+
+.evmr-calendar__daynum {
+	display: block;
+	font-size: var(--wp--preset--font-size--small, 0.8rem);
+	opacity: 0.6;
+	margin-bottom: 0.25rem;
+}
+
+.evmr-calendar__event {
+	display: block;
+	font-size: var(--wp--preset--font-size--small, 0.8rem);
+	margin-bottom: 0.2rem;
+	line-height: 1.25;
+}
+
+.evmr-calendar__pad {
+	background: rgba(0, 0, 0, 0.02);
+}
