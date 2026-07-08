@@ -73,6 +73,7 @@ class EVMR_Settings {
 
 		add_settings_section( 'evmr_display', __( 'Display', 'event-mirror' ), '__return_false', self::PAGE );
 		add_settings_field( 'cta_text', __( 'Default CTA text', 'event-mirror' ), array( $this, 'field_cta' ), self::PAGE, 'evmr_display' );
+		add_settings_field( 'schema', __( 'Event structured data', 'event-mirror' ), array( $this, 'field_schema' ), self::PAGE, 'evmr_display' );
 
 		add_settings_section( 'evmr_housekeeping', __( 'Auto Clean-Up', 'event-mirror' ), array( $this, 'section_housekeeping' ), self::PAGE );
 		add_settings_field( 'prune', __( 'Delete events older than', 'event-mirror' ), array( $this, 'field_prune' ), self::PAGE, 'evmr_housekeeping' );
@@ -100,6 +101,8 @@ class EVMR_Settings {
 		$clean['prune'] = ( isset( $input['prune'] ) && in_array( $input['prune'], $allowed_prune, true ) )
 			? $input['prune']
 			: '';
+
+		$clean['schema'] = empty( $input['schema'] ) ? 0 : 1;
 
 		// If the token changed, drop the cached org so it re-resolves.
 		$clean['org_id'] = ( isset( $existing['token'] ) && $existing['token'] === $clean['token'] && ! empty( $existing['org_id'] ) )
@@ -169,6 +172,20 @@ class EVMR_Settings {
 		);
 	}
 
+	public function field_schema() {
+		$settings = get_option( EVMR_OPTION, array() );
+		$on       = ! empty( $settings['schema'] );
+		printf(
+			'<label><input type="checkbox" name="%s[schema]" value="1"%s /> %s</label>',
+			esc_attr( EVMR_OPTION ),
+			checked( $on, true, false ),
+			esc_html__( 'Add Event structured data (JSON-LD) to the events archive', 'event-mirror' )
+		);
+		echo '<p class="description">'
+			. esc_html__( 'Off by default. When on, the events archive outputs schema.org Event markup that attributes each event to its Eventbrite listing (tickets, source link). Leave off if another SEO plugin already outputs Event schema.', 'event-mirror' )
+			. '</p>';
+	}
+
 	public function field_prune() {
 		$settings = get_option( EVMR_OPTION, array() );
 		$current  = isset( $settings['prune'] ) ? $settings['prune'] : '';
@@ -198,8 +215,13 @@ class EVMR_Settings {
 		$last_sync = get_option( 'evmr_last_sync', '' );
 		$logger    = evmr()->get( 'logger' );
 		?>
-		<div class="wrap">
-			<h1><?php esc_html_e( 'Event Mirror — Sync and Settings', 'event-mirror' ); ?></h1>
+		<div class="wrap evmr-dse">
+			<div class="evmr-topbar">
+				<span class="evmr-topbar__mark">EM</span>
+				<h1 class="evmr-topbar__title"><?php esc_html_e( 'Event Mirror · Sync and Settings', 'event-mirror' ); ?></h1>
+				<span class="evmr-topbar__spacer"></span>
+				<span class="evmr-topbar__tag"><?php esc_html_e( 'DSE 2026', 'event-mirror' ); ?></span>
+			</div>
 
 			<form action="options.php" method="post">
 				<?php

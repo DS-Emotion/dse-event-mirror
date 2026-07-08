@@ -35,6 +35,8 @@ class EVMR_Plugin {
 		$this->components['shortcode'] = new EVMR_Shortcode();
 		$this->components['block']     = new EVMR_Block();
 		$this->components['calendar']  = new EVMR_Calendar();
+		$this->components['schema']    = new EVMR_Schema();
+		$this->components['help']      = new EVMR_Help();
 
 		foreach ( $this->components as $component ) {
 			if ( method_exists( $component, 'hooks' ) ) {

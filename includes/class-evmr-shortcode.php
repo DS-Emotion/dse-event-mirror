@@ -81,7 +81,7 @@ class EVMR_Shortcode {
 		printf(
 			'<div class="evmr-grid evmr-grid--cols-%s" style="%s">',
 			esc_attr( $col ),
-			esc_attr( $this->grid_style( $atts['columns'] ) )
+			esc_attr( $this->grid_style() )
 		);
 		while ( $query->have_posts() ) {
 			$query->the_post();
@@ -107,12 +107,21 @@ class EVMR_Shortcode {
 
 		$post_id = (int) $atts['event_id'];
 		if ( ! $post_id || EVMR_POST_TYPE !== get_post_type( $post_id ) ) {
+			// Front-end stays silent; editors get a hint so a mistyped ID is
+			// easy to spot instead of the card just vanishing.
+			if ( current_user_can( 'edit_posts' ) ) {
+				return '<p class="evmr-notice">' . sprintf(
+					/* translators: %s: the event_id supplied to the shortcode. */
+					esc_html__( 'Event Mirror: no mirrored event found for event_id "%s". (This note is only visible to editors.)', 'event-mirror' ),
+					esc_html( (string) $atts['event_id'] )
+				) . '</p>';
+			}
 			return '';
 		}
 		wp_enqueue_style( 'event-mirror' );
 		$cta = '' !== $atts['cta'] ? $atts['cta'] : $this->default_cta();
 
-		return '<div class="evmr-grid" style="' . esc_attr( $this->grid_style( '1' ) ) . '">'
+		return '<div class="evmr-grid" style="' . esc_attr( $this->grid_style() ) . '">'
 			. self::card_html( $post_id, $cta, 'evmr-card--horizontal' ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			. '</div>';
 	}
@@ -157,23 +166,13 @@ class EVMR_Shortcode {
 	}
 
 	/**
-	 * Minimal grid layout (the only inlined CSS; everything else is theme styles).
+	 * Minimal grid layout. Only display + gap are inlined; the column count is
+	 * left to the stylesheet (keyed off the evmr-grid--cols-* class) so it can
+	 * collapse to a single column on small screens via media queries — an inline
+	 * grid-template-columns could not be overridden responsively.
 	 */
-	private function grid_style( $columns ) {
-		switch ( (string) $columns ) {
-			case '1':
-				$cols = '1fr';
-				break;
-			case '2':
-				$cols = 'repeat(2, 1fr)';
-				break;
-			case '3':
-				$cols = 'repeat(3, 1fr)';
-				break;
-			default:
-				$cols = 'repeat(auto-fill, minmax(260px, 1fr))';
-		}
-		return 'display:grid;grid-template-columns:' . $cols . ';gap:2.5rem 1.5rem;';
+	private function grid_style() {
+		return 'display:grid;gap:2.5rem 1.5rem;';
 	}
 
 	/**

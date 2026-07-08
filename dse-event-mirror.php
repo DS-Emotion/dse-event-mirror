@@ -3,7 +3,7 @@
  * Plugin Name:       Event Mirror
  * Plugin URI:        https://www.dsemotion.com
  * Description:        Mirrors your Eventbrite events into WordPress as native posts, kept in sync automatically. Works with Eventbrite.
- * Version:           0.7.3
+ * Version:           0.8.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            DS.Emotion
@@ -20,7 +20,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'EVMR_VERSION', '0.7.3' );
+define( 'EVMR_VERSION', '0.8.0' );
 define( 'EVMR_FILE', __FILE__ );
 define( 'EVMR_PATH', plugin_dir_path( __FILE__ ) );
 define( 'EVMR_URL', plugin_dir_url( __FILE__ ) );

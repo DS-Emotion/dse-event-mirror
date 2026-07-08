@@ -1,0 +1,274 @@
+/*
+ * Event Mirror — DSE 2026 Visual Identity for the plugin's admin pages.
+ * Scoped to .evmr-dse so it never bleeds into the rest of wp-admin.
+ * Derived from the DSE house style (Site Creator / Page Planner).
+ */
+
+.evmr-dse {
+	/* surfaces */
+	--bg: #EDEBE4;         /* warm cream working canvas */
+	--chrome: #3C3C3C;     /* dark charcoal top bar */
+	--card: #ffffff;       /* content sheets & cards */
+	/* text */
+	--ink: #3C3C3C;        /* primary text */
+	--muted: #8a8f82;      /* sage-grey secondary text */
+	/* lines */
+	--line: #cfccc1;
+	--line-dark: #525252;
+	/* accents */
+	--accent: #C5DEA2;     /* soft sage green */
+	--accent-dark: #aecd83;
+	--accent-soft: #DBD6F0; /* soft lavender */
+	--danger: #d8556a;
+	/* shape & depth */
+	--radius: 10px;
+	--shadow: 0 1px 3px rgba(20, 28, 28, .10), 0 5px 16px rgba(20, 28, 28, .07);
+
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+	-webkit-font-smoothing: antialiased;
+	color: var(--ink);
+}
+
+/* Undo the default wp-admin white gutter so the cream canvas reads as DSE. */
+.evmr-dse.wrap {
+	margin: 10px 20px 0 2px;
+}
+
+/* ---- Top bar (charcoal chrome) ---- */
+.evmr-topbar {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	background: var(--chrome);
+	border-radius: var(--radius) var(--radius) 0 0;
+	padding: 14px 22px;
+	color: #fff;
+}
+
+.evmr-topbar__mark {
+	width: 26px;
+	height: 26px;
+	border-radius: 7px;
+	background: var(--accent);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--chrome);
+	font-weight: 700;
+	font-size: 14px;
+	flex: 0 0 auto;
+}
+
+.evmr-topbar__title {
+	font-size: 18px;
+	font-weight: 200;
+	letter-spacing: .4px;
+	color: #fff;
+	margin: 0;
+}
+
+.evmr-topbar__spacer {
+	flex: 1;
+}
+
+.evmr-topbar__tag {
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: .8px;
+	text-transform: uppercase;
+	color: #d6d8cf;
+}
+
+/* ---- Working canvas + sheet ---- */
+.evmr-canvas {
+	background: var(--bg);
+	padding: 22px;
+	border-radius: 0 0 var(--radius) var(--radius);
+	box-shadow: var(--shadow);
+}
+
+.evmr-sheet {
+	background: var(--card);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+	padding: 34px 40px;
+}
+
+.evmr-sheet h1,
+.evmr-sheet h2 {
+	color: var(--ink);
+	font-weight: 700;
+	letter-spacing: .3px;
+}
+
+.evmr-sheet h1 { font-size: 22px; margin: 0 0 4px; }
+.evmr-sheet h2 { font-size: 18px; margin: 0 0 10px; }
+
+.evmr-lead {
+	color: var(--muted);
+	font-size: 13px;
+	line-height: 1.45;
+	margin: 0 0 22px;
+	max-width: 60ch;
+}
+
+/* ---- Eyebrow label ---- */
+.evmr-eyebrow {
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: .8px;
+	text-transform: uppercase;
+	color: var(--muted);
+	margin: 0 0 8px;
+}
+
+/* ---- Cards ---- */
+.evmr-grid-2 {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 20px;
+}
+
+@media (min-width: 1100px) {
+	.evmr-grid-2 { grid-template-columns: 1fr 1fr; }
+}
+
+.evmr-node {
+	background: var(--card);
+	border: 1.5px solid var(--line);
+	border-radius: 11px;
+	padding: 18px 20px 20px;
+	box-shadow: var(--shadow);
+	transition: border-color .12s, box-shadow .12s;
+}
+
+.evmr-node:hover { border-color: var(--accent-dark); }
+
+.evmr-node__title {
+	font-size: 14px;
+	font-weight: 700;
+	line-height: 1.25;
+	margin: 0 0 4px;
+	color: var(--ink);
+}
+
+.evmr-node__desc {
+	font-size: 12.5px;
+	color: #6b6f66;
+	line-height: 1.45;
+	margin: 0 0 14px;
+}
+
+/* ---- Wireframe SVG ---- */
+.evmr-wire { width: 100%; height: auto; display: block; margin: 0 0 16px; }
+.evmr-wire .wf-panel { fill: var(--bg); stroke: var(--line); stroke-width: 1; }
+.evmr-wire .wf-card { fill: #fff; stroke: var(--line); stroke-width: 1; }
+.evmr-wire .wf-img { fill: #e3e1d8; }
+.evmr-wire .wf-line { fill: #c9c6bb; }
+.evmr-wire .wf-btn { fill: var(--accent-dark); }
+.evmr-wire .wf-grid { fill: none; stroke: var(--line); stroke-width: 1; }
+.evmr-wire .wf-tick { fill: var(--accent-dark); }
+.evmr-wire .wf-frame { fill: none; stroke: var(--line-dark); stroke-width: 1.5; }
+.evmr-wire .wf-lbl { fill: var(--muted); font-size: 11px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+
+/* ---- Code snippet + copy ---- */
+.evmr-code {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	background: #f8f6fd;
+	border: 1px dashed var(--accent-soft);
+	border-radius: 8px;
+	padding: 8px 8px 8px 14px;
+	margin: 0 0 12px;
+}
+
+.evmr-code code {
+	flex: 1;
+	font-family: ui-monospace, Menlo, Consolas, monospace;
+	font-size: 12.5px;
+	color: var(--ink);
+	background: none;
+	white-space: nowrap;
+	overflow-x: auto;
+}
+
+.evmr-copy {
+	font: inherit;
+	font-size: 11px;
+	font-weight: 600;
+	cursor: pointer;
+	border: 1px solid var(--ink);
+	background: var(--ink);
+	color: #fff;
+	padding: 6px 12px;
+	border-radius: 8px;
+	transition: .15s;
+	white-space: nowrap;
+	flex: 0 0 auto;
+}
+
+.evmr-copy:hover { background: var(--accent); color: var(--ink); border-color: var(--accent); }
+.evmr-copy.is-done { background: var(--accent); color: var(--ink); border-color: var(--accent); }
+
+/* ---- Options table ---- */
+.evmr-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin: 4px 0 4px;
+	font-size: 12.5px;
+}
+
+.evmr-table th,
+.evmr-table td {
+	text-align: left;
+	padding: 7px 10px;
+	border-bottom: 1px solid var(--line);
+	vertical-align: top;
+}
+
+.evmr-table th {
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: .6px;
+	text-transform: uppercase;
+	color: var(--muted);
+}
+
+.evmr-table code {
+	font-family: ui-monospace, Menlo, Consolas, monospace;
+	font-size: 12px;
+	background: #f4f3ee;
+	padding: 1px 6px;
+	border-radius: 4px;
+}
+
+/* ---- Small note / chip ---- */
+.evmr-chip {
+	display: inline-block;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: .5px;
+	text-transform: uppercase;
+	color: var(--ink);
+	background: var(--accent-soft);
+	padding: 3px 9px;
+	border-radius: 20px;
+}
+
+/* ---- DSE treatment for the Settings page primary button ---- */
+.evmr-dse .button-primary {
+	background: var(--ink);
+	border-color: var(--ink);
+	color: #fff;
+	box-shadow: none;
+	text-shadow: none;
+	border-radius: 8px;
+}
+
+.evmr-dse .button-primary:hover,
+.evmr-dse .button-primary:focus {
+	background: var(--accent-dark);
+	border-color: var(--accent-dark);
+	color: var(--ink);
+}

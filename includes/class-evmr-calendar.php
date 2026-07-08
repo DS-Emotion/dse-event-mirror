@@ -16,6 +16,22 @@ class EVMR_Calendar {
 	public function hooks() {
 		add_action( 'init', array( $this, 'register' ) );
 		add_shortcode( 'event_mirror_calendar', array( $this, 'shortcode' ) );
+		add_filter( 'query_vars', array( $this, 'register_query_var' ) );
+	}
+
+	/**
+	 * Register the month-navigation parameter as a known query var.
+	 *
+	 * Without this, WordPress's canonical redirect treats ?evmr_month as an
+	 * unknown argument and strips it, so the prev/next arrows appear to do
+	 * nothing. The param is the calendar's own contract, so the plugin owns it.
+	 *
+	 * @param array $vars Registered public query vars.
+	 * @return array
+	 */
+	public function register_query_var( $vars ) {
+		$vars[] = 'evmr_month';
+		return $vars;
 	}
 
 	/**
@@ -99,8 +115,13 @@ class EVMR_Calendar {
 		$category = isset( $attributes['category'] ) ? $attributes['category'] : '';
 		$tag      = isset( $attributes['tag'] ) ? $attributes['tag'] : '';
 
-		// Which month? ?evmr_month=YYYY-MM, else current.
-		$req = isset( $_GET['evmr_month'] ) ? preg_replace( '/[^0-9\-]/', '', wp_unslash( $_GET['evmr_month'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		// Which month? ?evmr_month=YYYY-MM, else current. Read via get_query_var()
+		// (now that it is registered) with a $_GET fallback for block previews.
+		$req_raw = get_query_var( 'evmr_month' );
+		if ( '' === $req_raw && isset( $_GET['evmr_month'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$req_raw = wp_unslash( $_GET['evmr_month'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		}
+		$req  = preg_replace( '/[^0-9\-]/', '', (string) $req_raw );
 		$base = ( $req && preg_match( '/^\d{4}-\d{2}$/', $req ) ) ? strtotime( $req . '-01' ) : current_time( 'timestamp' );
 
 		$year      = (int) gmdate( 'Y', $base );
@@ -116,6 +137,11 @@ class EVMR_Calendar {
 		$prev = gmdate( 'Y-m', strtotime( '-1 month', $first ) );
 		$next = gmdate( 'Y-m', strtotime( '+1 month', $first ) );
 		$base_url = remove_query_arg( 'evmr_month' );
+
+		// Stable per-instance anchor so the prev/next reload lands back on the
+		// calendar instead of the top of the page. Scoped by category/tag so
+		// multiple calendars on one page each anchor to themselves.
+		$cal_id = 'evmr-cal-' . substr( md5( $category . '|' . $tag ), 0, 6 );
 
 		// Weekday labels ordered by start_of_week.
 		$labels = array(
@@ -133,11 +159,11 @@ class EVMR_Calendar {
 
 		ob_start();
 		?>
-		<div class="evmr-calendar-wrap">
+		<div class="evmr-calendar-wrap" id="<?php echo esc_attr( $cal_id ); ?>">
 			<div class="evmr-calendar__nav">
-				<a class="wp-element-button button" href="<?php echo esc_url( add_query_arg( 'evmr_month', $prev, $base_url ) ); ?>">&larr;</a>
+				<a class="wp-element-button button" href="<?php echo esc_url( add_query_arg( 'evmr_month', $prev, $base_url ) . '#' . $cal_id ); ?>">&larr;</a>
 				<strong><?php echo esc_html( date_i18n( 'F Y', $first ) ); ?></strong>
-				<a class="wp-element-button button" href="<?php echo esc_url( add_query_arg( 'evmr_month', $next, $base_url ) ); ?>">&rarr;</a>
+				<a class="wp-element-button button" href="<?php echo esc_url( add_query_arg( 'evmr_month', $next, $base_url ) . '#' . $cal_id ); ?>">&rarr;</a>
 			</div>
 			<table class="evmr-calendar">
 				<thead><tr>

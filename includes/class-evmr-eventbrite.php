@@ -121,7 +121,8 @@ class EVMR_Eventbrite {
 
 		do {
 			$query = array(
-				'expand' => 'venue,logo',
+				// ticket_availability adds minimum price / is_free for Event schema.
+				'expand' => 'venue,logo,ticket_availability',
 				'status' => 'all',
 			);
 			if ( $continuation ) {

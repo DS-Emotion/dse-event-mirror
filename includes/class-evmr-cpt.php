@@ -25,6 +25,22 @@ class EVMR_CPT {
 		add_action( 'add_meta_boxes', array( $this, 'add_description_box' ) );
 		add_action( 'add_meta_boxes', array( $this, 'add_cleanup_box' ) );
 		add_action( 'save_post_' . EVMR_POST_TYPE, array( $this, 'save_cleanup_meta' ) );
+		add_action( 'template_redirect', array( $this, 'block_single_views' ) );
+	}
+
+	/**
+	 * Events are shown only as cards and in the archive/listings page — there are
+	 * no individual event pages. The posts still exist (they power the cards, the
+	 * calendar and the archive), but their auto-generated single-view URLs return
+	 * a 404 instead of rendering a page. The /events/ archive is unaffected.
+	 */
+	public function block_single_views() {
+		if ( is_singular( EVMR_POST_TYPE ) ) {
+			global $wp_query;
+			$wp_query->set_404();
+			status_header( 404 );
+			nocache_headers();
+		}
 	}
 
 	/**

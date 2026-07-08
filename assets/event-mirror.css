@@ -1,6 +1,30 @@
 /* Event Mirror — minimal card layout. Box structure only; colours, fonts and
    buttons still come from the active theme via CSS variables with fallbacks. */
 
+/* Grid — mobile-first. Base is a single column so cards never get crushed on
+   phones; the requested column count is applied from a breakpoint up. The
+   "auto" mode is intrinsically responsive and applies at every width. */
+.evmr-grid {
+	grid-template-columns: 1fr;
+}
+
+.evmr-grid--cols-auto {
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+@media (min-width: 600px) {
+	.evmr-grid--cols-2,
+	.evmr-grid--cols-3 {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (min-width: 900px) {
+	.evmr-grid--cols-3 {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+
 .evmr-card {
 	display: flex;
 	flex-direction: column;

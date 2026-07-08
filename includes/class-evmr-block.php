@@ -54,6 +54,66 @@ class EVMR_Block {
 				),
 			)
 		);
+
+		// Events grid block — the block equivalent of the [event_mirror] shortcode.
+		wp_register_script(
+			'evmr-grid-block',
+			EVMR_URL . 'assets/grid-block.js',
+			array( 'wp-blocks', 'wp-element', 'wp-components' ),
+			EVMR_VERSION,
+			true
+		);
+
+		register_block_type(
+			'event-mirror/grid',
+			array(
+				'api_version'     => 2,
+				'editor_script'   => 'evmr-grid-block',
+				'render_callback' => array( $this, 'render_grid' ),
+				'attributes'      => array(
+					'columns'  => array(
+						'type'    => 'string',
+						'default' => 'auto',
+					),
+					'limit'    => array(
+						'type'    => 'number',
+						'default' => 12,
+					),
+					'upcoming' => array(
+						'type'    => 'boolean',
+						'default' => true,
+					),
+					'category' => array(
+						'type'    => 'string',
+						'default' => '',
+					),
+					'tag'      => array(
+						'type'    => 'string',
+						'default' => '',
+					),
+				),
+			)
+		);
+	}
+
+	/**
+	 * Server render for the events grid block: hand off to the shared grid
+	 * renderer so it matches the [event_mirror] shortcode exactly.
+	 *
+	 * @param array $attributes Block attributes.
+	 * @return string
+	 */
+	public function render_grid( $attributes ) {
+		$atts = array(
+			'columns'  => isset( $attributes['columns'] ) ? $attributes['columns'] : 'auto',
+			'limit'    => isset( $attributes['limit'] ) ? (int) $attributes['limit'] : 12,
+			'upcoming' => ( ! isset( $attributes['upcoming'] ) || $attributes['upcoming'] ) ? 'yes' : 'no',
+			'category' => isset( $attributes['category'] ) ? $attributes['category'] : '',
+			'tag'      => isset( $attributes['tag'] ) ? $attributes['tag'] : '',
+		);
+
+		$shortcode = evmr()->get( 'shortcode' );
+		return $shortcode ? $shortcode->render_grid( $atts ) : '';
 	}
 
 	/**

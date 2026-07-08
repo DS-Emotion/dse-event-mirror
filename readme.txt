@@ -4,7 +4,7 @@ Tags: events, eventbrite, sync, calendar, mirror
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.7.3
+Stable tag: 0.8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -42,6 +42,17 @@ The schedule uses WP-Cron by default. For reliable timing on quiet sites, point
 a real server cron job at wp-cron.php (see the setup guide).
 
 == Changelog ==
+
+= 0.8.0 =
+* New: "Events (grid)" block for the block editor — the block equivalent of the [event_mirror] shortcode, with column/limit/filter controls.
+* New: "How to Display" admin page with wireframes, copy-paste shortcodes, and block references.
+* New: DS.Emotion (DSE 2026) house styling across the plugin's admin pages (no external fonts).
+* New: optional Event structured data (JSON-LD) on the events archive, attributing each event to its Eventbrite listing (off by default).
+* Change: individual event pages now return 404 — events are shown only as cards and in the listings/archive page.
+* Change: sync now stores structured address, ticket price, and local timezone for richer structured data (populated on the next sync).
+* Fix: calendar prev/next navigation now works (evmr_month registered as a query var) and no longer jumps to the top of the page.
+* Fix: event grid collapses to a single column on small screens for columns="2" and columns="3".
+* Fix: [event_mirror_card] with an invalid event_id now shows an editor-only note instead of rendering nothing.
 
 = 0.1.0 =
 * Initial proof of concept: token settings, sync engine, manual sync, shortcode display, activity log.

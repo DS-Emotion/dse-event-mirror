@@ -289,12 +289,28 @@ class EVMR_Sync {
 	 * @return array
 	 */
 	private function map_fields( $event ) {
+		$address = ( isset( $event['venue']['address'] ) && is_array( $event['venue']['address'] ) )
+			? $event['venue']['address']
+			: array();
+
 		$venue_name = '';
 		if ( ! empty( $event['venue']['name'] ) ) {
 			$venue_name = $event['venue']['name'];
-		} elseif ( ! empty( $event['venue']['address']['localized_address_display'] ) ) {
-			$venue_name = $event['venue']['address']['localized_address_display'];
+		} elseif ( ! empty( $address['localized_address_display'] ) ) {
+			$venue_name = $address['localized_address_display'];
 		}
+
+		// Minimum ticket price (from the ticket_availability expansion).
+		$price      = '';
+		$currency   = '';
+		$min        = isset( $event['ticket_availability']['minimum_ticket_price'] )
+			? $event['ticket_availability']['minimum_ticket_price']
+			: array();
+		if ( isset( $min['major_value'] ) && '' !== $min['major_value'] ) {
+			$price    = $min['major_value'];
+			$currency = isset( $min['currency'] ) ? $min['currency'] : '';
+		}
+		$is_free = ( ! empty( $event['is_free'] ) || ! empty( $event['ticket_availability']['is_free'] ) ) ? 1 : 0;
 
 		$fields = array(
 			'title'   => isset( $event['name']['text'] ) ? $event['name']['text'] : __( '(untitled event)', 'event-mirror' ),
@@ -311,6 +327,21 @@ class EVMR_Sync {
 				'_evmr_image'     => isset( $event['logo']['original']['url'] )
 					? $event['logo']['original']['url']
 					: ( isset( $event['logo']['url'] ) ? $event['logo']['url'] : '' ),
+
+				// Structured data (Event schema). Populated on the next sync.
+				'_evmr_start_local' => isset( $event['start']['local'] ) ? $event['start']['local'] : '',
+				'_evmr_start_tz'    => isset( $event['start']['timezone'] ) ? $event['start']['timezone'] : '',
+				'_evmr_end_local'   => isset( $event['end']['local'] ) ? $event['end']['local'] : '',
+				'_evmr_end_tz'      => isset( $event['end']['timezone'] ) ? $event['end']['timezone'] : '',
+				'_evmr_street'      => isset( $address['address_1'] ) ? $address['address_1'] : '',
+				'_evmr_street2'     => isset( $address['address_2'] ) ? $address['address_2'] : '',
+				'_evmr_city'        => isset( $address['city'] ) ? $address['city'] : '',
+				'_evmr_region'      => isset( $address['region'] ) ? $address['region'] : '',
+				'_evmr_postal'      => isset( $address['postal_code'] ) ? $address['postal_code'] : '',
+				'_evmr_country'     => isset( $address['country'] ) ? $address['country'] : '',
+				'_evmr_price'       => $price,
+				'_evmr_currency'    => $currency,
+				'_evmr_is_free'     => $is_free,
 			),
 		);
 
