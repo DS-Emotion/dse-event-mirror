@@ -71,7 +71,7 @@ require EVMR_PATH . 'includes/plugin-update-checker/plugin-update-checker.php';
 $evmr_update_checker = YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
 	'https://github.com/DS-Emotion/dse-event-mirror/',
 	EVMR_FILE,
-	'event-mirror'
+	'dse-event-mirror'
 );
 
 // Activation / deactivation.
