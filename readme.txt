@@ -4,7 +4,7 @@ Tags: events, eventbrite, sync, calendar, mirror
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.10.0
+Stable tag: 0.10.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -42,6 +42,10 @@ The schedule uses WP-Cron by default. For reliable timing on quiet sites, point
 a real server cron job at wp-cron.php (see the setup guide).
 
 == Changelog ==
+
+= 0.10.1 =
+* Fix: the Events page now displays correctly. Rewrite rules are regenerated automatically after the /events/ archive was disabled, so the assigned page is served instead of the stale theme archive (no manual Permalinks re-save needed).
+* Fix: the Events page listing renders after wpautop (priority 20) so auto-paragraphs no longer break the grid/list markup, and the stylesheet is enqueued on the page via wp_enqueue_scripts.
 
 = 0.10.0 =
 * New: a dedicated Events page — assign (or auto-create) a real WordPress Page as the canonical, paginated events listing, the way WooCommerce assigns a Shop page.

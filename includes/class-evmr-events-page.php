@@ -23,10 +23,24 @@ class EVMR_Events_Page {
 	 */
 	public function hooks() {
 		add_filter( 'query_vars', array( $this, 'register_query_var' ) );
-		add_filter( 'the_content', array( $this, 'render' ), 9 );
+		// Priority 20 so our markup is inserted AFTER wpautop / do_shortcode
+		// (which run at 10/11). At an earlier priority wpautop would inject
+		// stray <p>/<br> tags into the grid/list markup and break the layout.
+		add_filter( 'the_content', array( $this, 'render' ), 20 );
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_filter( 'display_post_states', array( $this, 'post_state_badge' ), 10, 2 );
 		add_action( 'admin_notices', array( $this, 'setup_notice' ) );
 		add_action( 'admin_post_evmr_create_events_page', array( $this, 'handle_create' ) );
+	}
+
+	/**
+	 * Ensure the front-end stylesheet is in <head> on the Events page.
+	 */
+	public function enqueue_assets() {
+		$page_id = self::page_id();
+		if ( $page_id && is_page( $page_id ) ) {
+			wp_enqueue_style( 'event-mirror' );
+		}
 	}
 
 	/**

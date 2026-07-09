@@ -45,6 +45,11 @@ class EVMR_Plugin {
 			}
 		}
 
+		// Regenerate rewrite rules once after an update that changes them (e.g.
+		// disabling the /events/ archive), so admins don't have to re-save
+		// Permalinks by hand. Runs after the post type registers on `init`.
+		add_action( 'init', array( $this, 'maybe_flush_rewrites' ), 99 );
+
 		/**
 		 * Fires after Event Mirror has loaded all of its components.
 		 * Pro add-ons should hook here to register their own pieces.
@@ -62,6 +67,18 @@ class EVMR_Plugin {
 	 */
 	public function get( $name ) {
 		return isset( $this->components[ $name ] ) ? $this->components[ $name ] : null;
+	}
+
+	/**
+	 * Flush rewrite rules once per plugin version. This clears the stale
+	 * /events/ archive rule after it was disabled, so the assigned Events page
+	 * (which shares that slug) resolves correctly — no manual Permalinks re-save.
+	 */
+	public function maybe_flush_rewrites() {
+		if ( get_option( 'evmr_rewrite_version' ) !== EVMR_VERSION ) {
+			flush_rewrite_rules( false );
+			update_option( 'evmr_rewrite_version', EVMR_VERSION, false );
+		}
 	}
 
 	/**
