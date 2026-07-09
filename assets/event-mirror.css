@@ -294,3 +294,30 @@
 		order: 3;
 	}
 }
+
+/* Pagination on the Events page. */
+.evmr-pagination {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin-top: 2.5rem;
+}
+
+.evmr-pagination .page-numbers {
+	display: inline-block;
+	padding: 0.45em 0.75em;
+	line-height: 1;
+	text-decoration: none;
+	border: 1px solid var(--wp--preset--color--tertiary, rgba(0, 0, 0, 0.15));
+	border-radius: var(--evmr-radius, 6px);
+}
+
+.evmr-pagination .page-numbers.current {
+	background: var(--wp--preset--color--contrast, #1a1a1a);
+	color: var(--wp--preset--color--base, #fff);
+	border-color: transparent;
+}
+
+.evmr-pagination .page-numbers.dots {
+	border-color: transparent;
+}

@@ -67,6 +67,11 @@ class EVMR_Settings {
 			array( 'sanitize_callback' => array( $this, 'sanitize' ) )
 		);
 
+		add_settings_section( 'evmr_events_page', __( 'Events page', 'event-mirror' ), array( $this, 'section_events_page' ), self::PAGE );
+		add_settings_field( 'events_page', __( 'Events page', 'event-mirror' ), array( $this, 'field_events_page' ), self::PAGE, 'evmr_events_page' );
+		add_settings_field( 'events_layout', __( 'Listing view', 'event-mirror' ), array( $this, 'field_events_layout' ), self::PAGE, 'evmr_events_page' );
+		add_settings_field( 'events_per_page', __( 'Events per page', 'event-mirror' ), array( $this, 'field_events_per_page' ), self::PAGE, 'evmr_events_page' );
+
 		add_settings_section( 'evmr_connection', __( 'Connection', 'event-mirror' ), array( $this, 'section_connection' ), self::PAGE );
 		add_settings_field( 'token', __( 'Eventbrite API token', 'event-mirror' ), array( $this, 'field_token' ), self::PAGE, 'evmr_connection' );
 		add_settings_field( 'frequency', __( 'Sync frequency', 'event-mirror' ), array( $this, 'field_frequency' ), self::PAGE, 'evmr_connection' );
@@ -104,6 +109,17 @@ class EVMR_Settings {
 
 		$clean['schema'] = empty( $input['schema'] ) ? 0 : 1;
 
+		// Events page assignment + listing options.
+		$clean['events_page'] = isset( $input['events_page'] )
+			? (int) $input['events_page']
+			: ( isset( $existing['events_page'] ) ? (int) $existing['events_page'] : 0 );
+
+		$clean['events_per_page'] = isset( $input['events_per_page'] )
+			? max( 1, (int) $input['events_per_page'] )
+			: 12;
+
+		$clean['events_layout'] = ( isset( $input['events_layout'] ) && 'grid' === $input['events_layout'] ) ? 'grid' : 'list';
+
 		// If the token changed, drop the cached org so it re-resolves.
 		$clean['org_id'] = ( isset( $existing['token'] ) && $existing['token'] === $clean['token'] && ! empty( $existing['org_id'] ) )
 			? $existing['org_id']
@@ -125,6 +141,73 @@ class EVMR_Settings {
 
 	public function section_housekeeping() {
 		echo '<p>' . esc_html__( 'Auto Clean-Up removes events whose end date is older than the window you choose, so your site only carries current events. Removed events are listed below and are not re-imported on the next sync. To keep a specific old event on your site, toggle "Exclude from Auto Clean-Up" on its row — it will be re-synced and never auto-removed.', 'event-mirror' ) . '</p>';
+	}
+
+	public function section_events_page() {
+		echo '<p>' . esc_html__( 'This is the page that lists your events — the primary way visitors browse them, with pagination. Shortcodes and blocks are for signposting events elsewhere (a homepage teaser, a sidebar), not for building this listing.', 'event-mirror' ) . '</p>';
+	}
+
+	/**
+	 * Events page picker, with View / Edit links (or a Create button if none).
+	 */
+	public function field_events_page() {
+		$settings = get_option( EVMR_OPTION, array() );
+		$current  = isset( $settings['events_page'] ) ? (int) $settings['events_page'] : 0;
+
+		wp_dropdown_pages(
+			array(
+				'name'              => esc_attr( EVMR_OPTION ) . '[events_page]',
+				'selected'          => $current,
+				'show_option_none'  => __( '— None (no events page) —', 'event-mirror' ),
+				'option_none_value' => 0,
+			)
+		);
+
+		$assigned = EVMR_Events_Page::page_id();
+		if ( $assigned ) {
+			printf(
+				' <a href="%s" target="_blank" rel="noopener noreferrer">%s</a> &middot; <a href="%s">%s</a>',
+				esc_url( get_permalink( $assigned ) ),
+				esc_html__( 'View', 'event-mirror' ),
+				esc_url( get_edit_post_link( $assigned ) ),
+				esc_html__( 'Edit', 'event-mirror' )
+			);
+			echo '<p class="description">' . esc_html__( 'Your events are listed on this page. It also shows a "Events Page" badge in Pages so it is easy to find and add to a menu.', 'event-mirror' ) . '</p>';
+		} else {
+			echo '<p class="description">';
+			echo esc_html__( 'No events page yet.', 'event-mirror' ) . ' ';
+			printf(
+				'<a href="%s">%s</a>',
+				esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=evmr_create_events_page' ), 'evmr_create_events_page' ) ),
+				esc_html__( 'Create one automatically', 'event-mirror' )
+			);
+			echo esc_html__( ', or select an existing page above.', 'event-mirror' );
+			echo '</p>';
+		}
+	}
+
+	public function field_events_layout() {
+		$settings = get_option( EVMR_OPTION, array() );
+		$current  = ( isset( $settings['events_layout'] ) && 'grid' === $settings['events_layout'] ) ? 'grid' : 'list';
+		$options  = array(
+			'list' => __( 'List (full-width rows)', 'event-mirror' ),
+			'grid' => __( 'Grid of cards', 'event-mirror' ),
+		);
+		echo '<select name="' . esc_attr( EVMR_OPTION ) . '[events_layout]">';
+		foreach ( $options as $key => $label ) {
+			printf( '<option value="%s"%s>%s</option>', esc_attr( $key ), selected( $current, $key, false ), esc_html( $label ) );
+		}
+		echo '</select>';
+	}
+
+	public function field_events_per_page() {
+		$settings = get_option( EVMR_OPTION, array() );
+		$current  = isset( $settings['events_per_page'] ) ? max( 1, (int) $settings['events_per_page'] ) : 12;
+		printf(
+			'<input type="number" min="1" step="1" name="%s[events_per_page]" value="%s" class="small-text" />',
+			esc_attr( EVMR_OPTION ),
+			esc_attr( $current )
+		);
 	}
 
 	/* ---- Field renderers ---- */

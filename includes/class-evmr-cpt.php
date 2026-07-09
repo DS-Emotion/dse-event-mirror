@@ -170,12 +170,16 @@ class EVMR_CPT {
 			'labels'        => $labels,
 			'public'        => true,
 			'show_in_rest'  => true,
-			'has_archive'   => true,
+			// No automatic archive or front-end single URLs: events are shown
+			// only via the assigned Events page (and cards elsewhere). This also
+			// frees the "events" slug for that Page. Single views 404 via
+			// block_single_views(); the listing lives on the Events page.
+			'has_archive'   => false,
+			'rewrite'       => false,
 			'menu_icon'     => 'dashicons-calendar-alt',
 			// Editor intentionally omitted: the description is mirrored from
 			// Eventbrite and shown read-only (see add_description_box()).
 			'supports'      => array( 'title', 'thumbnail', 'excerpt' ),
-			'rewrite'       => array( 'slug' => 'events' ),
 			'taxonomies'    => array( self::TAXONOMY, self::TAG_TAXONOMY ),
 		);
 

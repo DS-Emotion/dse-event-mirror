@@ -27,7 +27,7 @@ class EVMR_Schema {
 	}
 
 	/**
-	 * Print an ItemList of Event objects on the events archive, if enabled.
+	 * Print an ItemList of Event objects on the assigned Events page, if enabled.
 	 */
 	public function output() {
 		$settings = get_option( EVMR_OPTION, array() );
@@ -35,25 +35,38 @@ class EVMR_Schema {
 			return;
 		}
 
-		// Only on the events archive or its category / tag archives — those are
-		// real pages that present the events. Never on single pages (there are
-		// none) or elsewhere.
-		if ( ! (
-			is_post_type_archive( EVMR_POST_TYPE )
-			|| is_tax( EVMR_CPT::TAXONOMY )
-			|| is_tax( EVMR_CPT::TAG_TAXONOMY )
-		) ) {
+		// Only on the assigned Events page — the real page that presents the
+		// events. Never on single events (there are none) or elsewhere.
+		$page_id = EVMR_Events_Page::page_id();
+		if ( ! $page_id || ! is_page( $page_id ) ) {
 			return;
 		}
 
-		global $wp_query;
-		if ( empty( $wp_query->posts ) ) {
+		$query = new WP_Query(
+			array(
+				'post_type'      => EVMR_POST_TYPE,
+				'posts_per_page' => 50,
+				'no_found_rows'  => true,
+				'meta_key'       => '_evmr_start_utc',
+				'orderby'        => 'meta_value',
+				'order'          => 'ASC',
+				'meta_query'     => array(
+					array(
+						'key'     => '_evmr_start_utc',
+						'value'   => gmdate( 'Y-m-d\TH:i:s\Z' ),
+						'compare' => '>=',
+						'type'    => 'CHAR',
+					),
+				),
+			)
+		);
+		if ( ! $query->have_posts() ) {
 			return;
 		}
 
 		$items    = array();
 		$position = 0;
-		foreach ( $wp_query->posts as $post ) {
+		foreach ( $query->posts as $post ) {
 			$event = $this->build_event( (int) $post->ID );
 			if ( $event ) {
 				$position++;
@@ -64,6 +77,7 @@ class EVMR_Schema {
 				);
 			}
 		}
+		wp_reset_postdata();
 
 		if ( empty( $items ) ) {
 			return;

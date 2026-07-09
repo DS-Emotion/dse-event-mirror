@@ -76,7 +76,7 @@ class EVMR_Help {
 			<div class="evmr-canvas">
 				<div class="evmr-sheet">
 					<h1><?php esc_html_e( 'Placing events on your site', 'event-mirror' ); ?></h1>
-					<p class="evmr-lead"><?php esc_html_e( 'Three ready-made views. Paste a shortcode into any page (classic editor), or add the matching block in the block editor. Copy a snippet with the button beside it.', 'event-mirror' ); ?></p>
+					<p class="evmr-lead"><?php esc_html_e( 'Your main events listing lives on your Events page — set it under Sync and Settings → Events page. The views below are for signposting events elsewhere (a homepage teaser, a sidebar, a landing page), using a shortcode in the classic editor or the matching block.', 'event-mirror' ); ?></p>
 
 					<div class="evmr-grid-2">
 

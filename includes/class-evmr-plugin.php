@@ -37,6 +37,7 @@ class EVMR_Plugin {
 		$this->components['calendar']  = new EVMR_Calendar();
 		$this->components['schema']    = new EVMR_Schema();
 		$this->components['help']      = new EVMR_Help();
+		$this->components['events_page'] = new EVMR_Events_Page();
 
 		foreach ( $this->components as $component ) {
 			if ( method_exists( $component, 'hooks' ) ) {
@@ -76,13 +77,18 @@ class EVMR_Plugin {
 			add_option(
 				EVMR_OPTION,
 				array(
-					'token'     => '',
-					'frequency' => 'hourly',
-					'cta_text'  => __( 'Get tickets', 'event-mirror' ),
-					'org_id'    => '',
+					'token'           => '',
+					'frequency'       => 'hourly',
+					'cta_text'        => __( 'Get tickets', 'event-mirror' ),
+					'org_id'          => '',
+					'events_per_page' => 12,
+					'events_layout'   => 'list',
 				)
 			);
 		}
+
+		// Create and assign the Events page (the canonical listing) if needed.
+		EVMR_Events_Page::ensure_page();
 
 		do_action( 'evmr_activated' );
 	}
