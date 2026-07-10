@@ -70,7 +70,6 @@ class EVMR_Settings {
 		add_settings_section( 'evmr_events_page', __( 'Events page', 'event-mirror' ), array( $this, 'section_events_page' ), self::PAGE );
 		add_settings_field( 'events_page', __( 'Events page', 'event-mirror' ), array( $this, 'field_events_page' ), self::PAGE, 'evmr_events_page' );
 		add_settings_field( 'events_layout', __( 'Listing view', 'event-mirror' ), array( $this, 'field_events_layout' ), self::PAGE, 'evmr_events_page' );
-		add_settings_field( 'events_per_page', __( 'Events per page', 'event-mirror' ), array( $this, 'field_events_per_page' ), self::PAGE, 'evmr_events_page' );
 
 		add_settings_section( 'evmr_connection', __( 'Connection', 'event-mirror' ), array( $this, 'section_connection' ), self::PAGE );
 		add_settings_field( 'token', __( 'Eventbrite API token', 'event-mirror' ), array( $this, 'field_token' ), self::PAGE, 'evmr_connection' );
@@ -113,10 +112,6 @@ class EVMR_Settings {
 		$clean['events_page'] = isset( $input['events_page'] )
 			? (int) $input['events_page']
 			: ( isset( $existing['events_page'] ) ? (int) $existing['events_page'] : 0 );
-
-		$clean['events_per_page'] = isset( $input['events_per_page'] )
-			? max( 1, (int) $input['events_per_page'] )
-			: 12;
 
 		$clean['events_layout'] = ( isset( $input['events_layout'] ) && 'grid' === $input['events_layout'] ) ? 'grid' : 'list';
 
@@ -198,16 +193,6 @@ class EVMR_Settings {
 			printf( '<option value="%s"%s>%s</option>', esc_attr( $key ), selected( $current, $key, false ), esc_html( $label ) );
 		}
 		echo '</select>';
-	}
-
-	public function field_events_per_page() {
-		$settings = get_option( EVMR_OPTION, array() );
-		$current  = isset( $settings['events_per_page'] ) ? max( 1, (int) $settings['events_per_page'] ) : 12;
-		printf(
-			'<input type="number" min="1" step="1" name="%s[events_per_page]" value="%s" class="small-text" />',
-			esc_attr( EVMR_OPTION ),
-			esc_attr( $current )
-		);
 	}
 
 	/* ---- Field renderers ---- */

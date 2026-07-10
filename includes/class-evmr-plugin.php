@@ -38,6 +38,7 @@ class EVMR_Plugin {
 		$this->components['schema']    = new EVMR_Schema();
 		$this->components['help']      = new EVMR_Help();
 		$this->components['events_page'] = new EVMR_Events_Page();
+		$this->components['wizard']      = new EVMR_Wizard();
 
 		foreach ( $this->components as $component ) {
 			if ( method_exists( $component, 'hooks' ) ) {
@@ -94,18 +95,20 @@ class EVMR_Plugin {
 			add_option(
 				EVMR_OPTION,
 				array(
-					'token'           => '',
-					'frequency'       => 'hourly',
-					'cta_text'        => __( 'Get tickets', 'event-mirror' ),
-					'org_id'          => '',
-					'events_per_page' => 12,
-					'events_layout'   => 'list',
+					'token'         => '',
+					'frequency'     => 'hourly',
+					'cta_text'      => __( 'Get tickets', 'event-mirror' ),
+					'org_id'        => '',
+					'events_layout' => 'list',
 				)
 			);
 		}
 
 		// Create and assign the Events page (the canonical listing) if needed.
 		EVMR_Events_Page::ensure_page();
+
+		// Trigger the one-time setup wizard redirect (single activations only).
+		set_transient( 'evmr_activation_redirect', 1, 30 );
 
 		do_action( 'evmr_activated' );
 	}

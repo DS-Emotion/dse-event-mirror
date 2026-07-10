@@ -17,6 +17,7 @@ defined( 'ABSPATH' ) || exit;
 class EVMR_Events_Page {
 
 	const DEFAULT_TITLE = 'Events';
+	const PER_PAGE      = 12;
 
 	/**
 	 * Register hooks.
@@ -115,7 +116,7 @@ class EVMR_Events_Page {
 		}
 
 		$settings = get_option( EVMR_OPTION, array() );
-		$per_page = isset( $settings['events_per_page'] ) ? max( 1, (int) $settings['events_per_page'] ) : 12;
+		$per_page = self::PER_PAGE;
 		$layout   = ( isset( $settings['events_layout'] ) && 'grid' === $settings['events_layout'] ) ? 'grid' : 'list';
 		$cta      = ( isset( $settings['cta_text'] ) && '' !== $settings['cta_text'] ) ? $settings['cta_text'] : __( 'Get tickets', 'event-mirror' );
 
