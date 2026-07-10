@@ -291,7 +291,7 @@
 	}
 	.evmr-list-item__media {
 		min-height: 200px;
-		order: 3;
+		order: -1; /* image on top on mobile */
 	}
 }
 
