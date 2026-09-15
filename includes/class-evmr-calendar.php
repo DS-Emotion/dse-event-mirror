@@ -165,6 +165,7 @@ class EVMR_Calendar {
 				<strong><?php echo esc_html( date_i18n( 'F Y', $first ) ); ?></strong>
 				<a class="wp-element-button button" href="<?php echo esc_url( add_query_arg( 'evmr_month', $next, $base_url ) . '#' . $cal_id ); ?>">&rarr;</a>
 			</div>
+			<div class="evmr-calendar__scroller">
 			<table class="evmr-calendar">
 				<thead><tr>
 					<?php for ( $i = 0; $i < 7; $i++ ) : ?>
@@ -209,6 +210,7 @@ class EVMR_Calendar {
 				</tr>
 				</tbody>
 			</table>
+			</div>
 		</div>
 		<?php
 		return ob_get_clean();

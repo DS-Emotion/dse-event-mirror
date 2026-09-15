@@ -100,6 +100,7 @@ class EVMR_Plugin {
 					'cta_text'      => __( 'Get tickets', 'event-mirror' ),
 					'org_id'        => '',
 					'events_layout' => 'list',
+					'show_location' => 1,
 				)
 			);
 		}

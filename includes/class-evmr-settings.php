@@ -77,6 +77,7 @@ class EVMR_Settings {
 
 		add_settings_section( 'evmr_display', __( 'Display', 'event-mirror' ), '__return_false', self::PAGE );
 		add_settings_field( 'cta_text', __( 'Default CTA text', 'event-mirror' ), array( $this, 'field_cta' ), self::PAGE, 'evmr_display' );
+		add_settings_field( 'show_location', __( 'Event location', 'event-mirror' ), array( $this, 'field_show_location' ), self::PAGE, 'evmr_display' );
 		add_settings_field( 'schema', __( 'Event structured data', 'event-mirror' ), array( $this, 'field_schema' ), self::PAGE, 'evmr_display' );
 
 		add_settings_section( 'evmr_housekeeping', __( 'Auto Clean-Up', 'event-mirror' ), array( $this, 'section_housekeeping' ), self::PAGE );
@@ -107,6 +108,15 @@ class EVMR_Settings {
 			: '';
 
 		$clean['schema'] = empty( $input['schema'] ) ? 0 : 1;
+
+		// Location toggle. Only change it when the key is submitted (the settings
+		// form always sends it via a hidden field), so partial saves elsewhere,
+		// e.g. the setup wizard, never switch it off by accident. Defaults to on.
+		if ( isset( $input['show_location'] ) ) {
+			$clean['show_location'] = empty( $input['show_location'] ) ? 0 : 1;
+		} else {
+			$clean['show_location'] = isset( $existing['show_location'] ) ? (int) $existing['show_location'] : 1;
+		}
 
 		// Events page assignment + listing options.
 		$clean['events_page'] = isset( $input['events_page'] )
@@ -238,6 +248,36 @@ class EVMR_Settings {
 			esc_attr( $value ),
 			esc_html__( 'Button label shown on event cards, linking to the Eventbrite listing.', 'event-mirror' )
 		);
+	}
+
+	/**
+	 * Whether event cards and list rows should show the event location.
+	 * On unless explicitly switched off, so existing sites keep showing it.
+	 *
+	 * @return bool
+	 */
+	public static function show_location() {
+		$settings = get_option( EVMR_OPTION, array() );
+		$on       = ! isset( $settings['show_location'] ) || ! empty( $settings['show_location'] );
+
+		/**
+		 * Filter whether the event location is shown on the front end.
+		 *
+		 * @param bool $on Whether to show the location.
+		 */
+		return (bool) apply_filters( 'evmr_show_location', $on );
+	}
+
+	public function field_show_location() {
+		printf(
+			'<input type="hidden" name="%1$s[show_location]" value="0" /><label><input type="checkbox" name="%1$s[show_location]" value="1"%2$s /> %3$s</label>',
+			esc_attr( EVMR_OPTION ),
+			checked( self::show_location(), true, false ),
+			esc_html__( 'Show the event location on the front end', 'event-mirror' )
+		);
+		echo '<p class="description">'
+			. esc_html__( 'Applies to the Events page, event cards, list rows and the Event Mirror blocks. The location is the Eventbrite venue name (or its address if the venue has no name). Structured data keeps the location either way.', 'event-mirror' )
+			. '</p>';
 	}
 
 	public function field_schema() {

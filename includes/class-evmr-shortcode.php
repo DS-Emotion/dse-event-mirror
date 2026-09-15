@@ -15,6 +15,15 @@ defined( 'ABSPATH' ) || exit;
  */
 class EVMR_Shortcode {
 
+	/**
+	 * Counts rendered grids so each paginated instance gets a stable anchor id.
+	 * Deterministic within a page render, so a link built on page 1 still
+	 * resolves to the same element on page 2.
+	 *
+	 * @var int
+	 */
+	private static $instance = 0;
+
 	public function hooks() {
 		add_shortcode( 'event_mirror', array( $this, 'render_grid' ) );
 		add_shortcode( 'event_mirror_card', array( $this, 'render_single' ) );
@@ -22,19 +31,36 @@ class EVMR_Shortcode {
 	}
 
 	/**
-	 * Register the (tiny) card stylesheet; enqueued only when actually rendered.
+	 * Register the card stylesheet.
+	 *
+	 * It is registered AND always enqueued on the front end, deliberately.
+	 * Enqueuing lazily (only when a shortcode actually rendered) meant the file
+	 * landed at different points in the cascade depending on the page: early on
+	 * the assigned Events page, which enqueues on wp_enqueue_scripts, but after
+	 * the theme's stylesheet anywhere the shortcode was rendered mid-content.
+	 * Identical markup then styled differently on two pages, because equal
+	 * specificity ties were resolved by source order.
+	 *
+	 * The file is a couple of KB, so loading it site-wide costs far less than
+	 * that inconsistency. A theme rule now reliably beats a plugin rule of the
+	 * same specificity.
 	 */
 	public function register_assets() {
 		wp_register_style( 'event-mirror', EVMR_URL . 'assets/event-mirror.css', array(), EVMR_VERSION );
+
+		if ( ! is_admin() ) {
+			wp_enqueue_style( 'event-mirror' );
+		}
 	}
 
 	/**
-	 * [event_mirror] — grid of upcoming events.
+	 * [event_mirror] — grid of upcoming events, optionally paginated.
 	 */
 	public function render_grid( $atts ) {
 		$atts = shortcode_atts(
 			array(
-				'limit'    => 12,
+				'limit'    => 12,     // With paginate="yes" this is the per-page count.
+				'paginate' => 'no',   // yes | no. Adds numbered paging below the events.
 				'upcoming' => 'yes',
 				'columns'  => 'auto', // 2 | 3 | auto (responsive). Grid layout only.
 				'layout'   => 'grid', // grid | list (full-width rows).
@@ -67,6 +93,18 @@ class EVMR_Shortcode {
 			);
 		}
 
+		// Paging uses the same evmr_page query var as the assigned Events page, so
+		// the two never fight over ?paged and page 2+ still resolves on a static
+		// front page. Without paging we skip SQL_CALC_FOUND_ROWS entirely.
+		$paginate = in_array( strtolower( (string) $atts['paginate'] ), array( 'yes', 'true', '1' ), true );
+		$paged    = 1;
+		if ( $paginate ) {
+			$paged         = max( 1, (int) get_query_var( 'evmr_page' ) );
+			$args['paged'] = $paged;
+		} else {
+			$args['no_found_rows'] = true;
+		}
+
 		$args  = apply_filters( 'evmr_display_query_args', $args, $atts );
 		$query = new WP_Query( $args );
 
@@ -79,18 +117,37 @@ class EVMR_Shortcode {
 
 		$layout = ( 'list' === strtolower( (string) $atts['layout'] ) ) ? 'list' : 'grid';
 
+		// Only paginated instances need an anchor to jump back to.
+		$anchor    = $paginate ? 'evmr-events-' . ++self::$instance : '';
+		$anchor_at = $anchor ? ' id="' . esc_attr( $anchor ) . '"' : '';
+
 		ob_start();
 		if ( 'list' === $layout ) {
-			echo '<div class="evmr-list">';
+			echo '<div' . $anchor_at . ' class="evmr-list">'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			$last_month = '';
 			while ( $query->have_posts() ) {
 				$query->the_post();
+
+				// Break the run of events with a month heading, so a long list
+				// stays scannable.
+				$start_utc = get_post_meta( get_the_ID(), '_evmr_start_utc', true );
+				if ( $start_utc ) {
+					$local = get_date_from_gmt( str_replace( array( 'T', 'Z' ), array( ' ', '' ), $start_utc ) );
+					$month = mysql2date( 'F Y', $local );
+					if ( $month !== $last_month ) {
+						printf( '<h3 class="evmr-list-month">%s</h3>', esc_html( $month ) );
+						$last_month = $month;
+					}
+				}
+
 				echo self::list_item_html( get_the_ID(), $cta ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			}
 			echo '</div>';
 		} else {
 			$col = preg_replace( '/[^a-z0-9]/', '', strtolower( (string) $atts['columns'] ) );
 			printf(
-				'<div class="evmr-grid evmr-grid--cols-%s">',
+				'<div%s class="evmr-grid evmr-grid--cols-%s">',
+				$anchor_at, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				esc_attr( $col )
 			);
 			while ( $query->have_posts() ) {
@@ -100,6 +157,30 @@ class EVMR_Shortcode {
 			echo '</div>';
 		}
 		wp_reset_postdata();
+
+		if ( $paginate && $query->max_num_pages > 1 ) {
+			// Page through whichever singular page or post the shortcode sits on,
+			// so this works inside a Flexible Blocks template as well as on the
+			// assigned Events page.
+			$base_id  = get_queried_object_id();
+			$base_url = $base_id ? get_permalink( $base_id ) : home_url( '/' );
+			$links    = paginate_links(
+				array(
+					// Fragment lands the reader on the listing, not the top of the page.
+					'base'      => add_query_arg( 'evmr_page', '%#%', $base_url ) . '#' . $anchor,
+					'format'    => '',
+					'current'   => $paged,
+					'total'     => (int) $query->max_num_pages,
+					'mid_size'  => 1,
+					'prev_text' => __( '&larr; Previous', 'event-mirror' ),
+					'next_text' => __( 'Next &rarr;', 'event-mirror' ),
+				)
+			);
+			if ( $links ) {
+				echo '<nav class="evmr-pagination">' . $links . '</nav>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			}
+		}
+
 		return ob_get_clean();
 	}
 
@@ -196,21 +277,22 @@ class EVMR_Shortcode {
 
 		// Description only on the featured (horizontal) card, capped at ~40 words.
 		$is_featured = ( false !== strpos( $extra_class, 'evmr-card--horizontal' ) );
-		$show_desc   = $is_featured;
-		$desc        = $show_desc
-			? wp_trim_words( wp_strip_all_tags( (string) get_post_field( 'post_content', $post_id ) ), 40, '…' )
-			: '';
+		// Grid cards carry a shorter summary than the featured card so a row of
+		// them stays even; both get one.
+		$desc = wp_trim_words(
+			wp_strip_all_tags( (string) get_post_field( 'post_content', $post_id ) ),
+			$is_featured ? 40 : 22,
+			'…'
+		);
 
 		// Grid cards hide the CTA for cancelled/ended; a featured card always
 		// shows it (you chose to highlight that event).
 		$show_cta = $url && ( ! $is_dead || $is_featured );
 
-		$when = $start
-			? mysql2date(
-				get_option( 'date_format' ) . ' g:i a',
-				get_date_from_gmt( str_replace( array( 'T', 'Z' ), array( ' ', '' ), $start ) )
-			)
-			: '';
+		// Location visibility is controlled in Settings > Display.
+		$show_venue = EVMR_Settings::show_location();
+
+		list( $dow, $date, $time ) = self::when_parts( $post_id );
 
 		ob_start();
 		?>
@@ -222,11 +304,20 @@ class EVMR_Shortcode {
 				<?php if ( $eyebrow ) : ?>
 					<p class="evmr-card__eyebrow"><?php echo esc_html( $eyebrow ); ?></p>
 				<?php endif; ?>
-				<h3 class="evmr-card__title"><?php echo esc_html( get_the_title( $post_id ) ); ?></h3>
-				<?php if ( $when ) : ?>
-					<p class="evmr-card__date"><?php echo esc_html( $when ); ?></p>
+				<h3 class="evmr-card__title"><?php echo esc_html( self::sentence_case( get_the_title( $post_id ) ) ); ?></h3>
+				<?php if ( $date ) : ?>
+					<p class="evmr-card__when">
+						<?php if ( $dow ) : ?>
+							<span class="evmr-card__dow"><?php echo esc_html( $dow ); ?></span>
+							<span class="evmr-card__sep" aria-hidden="true">|</span>
+						<?php endif; ?>
+						<span class="evmr-card__date"><?php echo esc_html( $date ); ?></span>
+					</p>
 				<?php endif; ?>
-				<?php if ( $venue ) : ?>
+				<?php if ( $time ) : ?>
+					<p class="evmr-card__time"><?php echo esc_html( $time ); ?></p>
+				<?php endif; ?>
+				<?php if ( $venue && $show_venue ) : ?>
 					<p class="evmr-card__venue"><?php echo esc_html( $venue ); ?></p>
 				<?php endif; ?>
 				<?php if ( $desc ) : ?>
@@ -290,8 +381,8 @@ class EVMR_Shortcode {
 				<?php if ( $when ) : ?>
 					<p class="evmr-list-item__when"><?php echo esc_html( $when ); ?></p>
 				<?php endif; ?>
-				<h3 class="evmr-list-item__title"><?php echo esc_html( get_the_title( $post_id ) ); ?></h3>
-				<?php if ( $venue ) : ?>
+				<h3 class="evmr-list-item__title"><?php echo esc_html( self::sentence_case( get_the_title( $post_id ) ) ); ?></h3>
+				<?php if ( $venue && EVMR_Settings::show_location() ) : ?>
 					<p class="evmr-card__venue"><?php echo esc_html( $venue ); ?></p>
 				<?php endif; ?>
 				<?php if ( $desc ) : ?>
@@ -317,6 +408,83 @@ class EVMR_Shortcode {
 	 * @param int $post_id Post ID.
 	 * @return string
 	 */
+	/**
+	 * Start date split into its parts, so a card can put the day, the date and
+	 * the time on separate lines. when_range() stays for the list view, which
+	 * wants them on one line.
+	 *
+	 * @param int $post_id Event post ID.
+	 * @return array{0:string,1:string,2:string} [ day-of-week, date, time range ].
+	 */
+	private static function when_parts( $post_id ) {
+		$start = get_post_meta( $post_id, '_evmr_start_utc', true );
+		if ( ! $start ) {
+			return array( '', '', '' );
+		}
+		$to_local = function ( $utc ) {
+			return get_date_from_gmt( str_replace( array( 'T', 'Z' ), array( ' ', '' ), $utc ) );
+		};
+		$date_fmt = get_option( 'date_format' );
+		$time_fmt = 'g:i a';
+		$start_l  = $to_local( $start );
+
+		$dow  = mysql2date( 'D', $start_l );
+		$date = mysql2date( $date_fmt, $start_l );
+		$time = mysql2date( $time_fmt, $start_l );
+
+		// Show the finish time too, so a reader can see how long it runs.
+		$end = get_post_meta( $post_id, '_evmr_end_utc', true );
+		if ( $end ) {
+			$end_l = $to_local( $end );
+			if ( mysql2date( 'Y-m-d', $start_l ) === mysql2date( 'Y-m-d', $end_l ) ) {
+				$time .= ' - ' . mysql2date( $time_fmt, $end_l );
+			} else {
+				$time .= ' - ' . mysql2date( $date_fmt . ' \@ ' . $time_fmt, $end_l );
+			}
+		}
+		return array( $dow, $date, $time );
+	}
+
+	/**
+	 * Eventbrite listings are often typed in ALL CAPS. Titles are shown in
+	 * sentence case for consistency across the views, but only when the title is
+	 * actually shouting — a normally-cased title is left exactly as written.
+	 *
+	 * Short all-caps tokens (CIC, NOMA, BBC) are preserved, since lowercasing an
+	 * acronym reads worse than the shouting did.
+	 *
+	 * @param string $title Raw post title.
+	 * @return string
+	 */
+	public static function sentence_case( $title ) {
+		$title   = (string) $title;
+		$letters = preg_replace( '/[^\p{L}]/u', '', $title );
+		if ( '' === $letters ) {
+			return $title;
+		}
+		$upper = preg_replace( '/[^\p{Lu}]/u', '', $letters );
+		if ( ( mb_strlen( $upper ) / mb_strlen( $letters ) ) < 0.6 ) {
+			return $title;
+		}
+
+		// No attempt to guess acronyms: in a fully-shouting title there is no
+		// signal that tells CIC from CLUB, and a length rule keeps far too much
+		// ("THE", "YOGA"). Lowercase throughout, then restore the sentence start
+		// and the pronoun "I" — the only reliable exceptions.
+		$out = mb_strtolower( $title );
+		$out = preg_replace( '/\\bi\\b/u', 'I', $out );
+		$out = preg_replace( "/\\bi'/u", "I'", $out );
+		$out = mb_strtoupper( mb_substr( $out, 0, 1 ) ) . mb_substr( $out, 1 );
+
+		/**
+		 * Filter the displayed title, e.g. to disable the sentence-case rewrite.
+		 *
+		 * @param string $out   Rewritten title.
+		 * @param string $title Original title.
+		 */
+		return apply_filters( 'evmr_display_title', $out, $title );
+	}
+
 	private static function when_range( $post_id ) {
 		$start = get_post_meta( $post_id, '_evmr_start_utc', true );
 		if ( ! $start ) {

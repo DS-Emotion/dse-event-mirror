@@ -91,11 +91,14 @@ class EVMR_Help {
 							<tbody>
 								<tr><td><code>columns</code></td><td>2, 3, auto</td><td>auto</td></tr>
 								<tr><td><code>limit</code></td><td><?php esc_html_e( 'any number', 'event-mirror' ); ?></td><td>12</td></tr>
+								<tr><td><code>paginate</code></td><td>yes, no</td><td>no</td></tr>
 								<tr><td><code>upcoming</code></td><td>yes, no</td><td>yes</td></tr>
 								<tr><td><code>category</code></td><td><?php esc_html_e( 'category slug(s)', 'event-mirror' ); ?></td><td>—</td></tr>
 								<tr><td><code>tag</code></td><td><?php esc_html_e( 'tag slug(s)', 'event-mirror' ); ?></td><td>—</td></tr>
 							</tbody>
 						</table>
+						<p class="evmr-node__desc" style="margin-top:12px;"><?php esc_html_e( 'To list every event with numbered paging, add paginate="yes" — limit then becomes the number shown per page.', 'event-mirror' ); ?></p>
+						<?php $this->snippet( '[event_mirror limit="12" paginate="yes"]' ); ?>
 						<p class="evmr-node__desc" style="margin-top:12px;"><?php esc_html_e( 'Block editor:', 'event-mirror' ); ?> <span class="evmr-chip"><?php esc_html_e( 'Events (grid)', 'event-mirror' ); ?></span></p>
 						<?php $this->card_close(); ?>
 
@@ -110,12 +113,20 @@ class EVMR_Help {
 
 						<?php
 						// ---- Calendar ----
+						// HIDDEN FOR NOMA (Sept 2026). The month calendar has styling
+						// issues we haven't resolved, so it is kept out of the docs to
+						// stop editors reaching for it. The [event_mirror_calendar]
+						// shortcode still works, so any page already using it is
+						// unaffected. To reinstate, define EVMR_ENABLE_CALENDAR as true
+						// in wp-config.php, or delete this guard.
+						if ( defined( 'EVMR_ENABLE_CALENDAR' ) && EVMR_ENABLE_CALENDAR ) :
 						$this->card_open( __( 'Calendar', 'event-mirror' ), __( 'Month calendar', 'event-mirror' ), __( 'A month grid with events in their day cells and prev / next navigation.', 'event-mirror' ) );
 						echo $this->wire_calendar(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 						$this->snippet( '[event_mirror_calendar]' );
 						echo '<p class="evmr-node__desc">' . esc_html__( 'Optional: category="slug" or tag="slug" to filter.', 'event-mirror' ) . '</p>';
 						echo '<p class="evmr-node__desc">' . esc_html__( 'Block editor:', 'event-mirror' ) . ' <span class="evmr-chip">' . esc_html__( 'Event Calendar', 'event-mirror' ) . '</span></p>';
 						$this->card_close();
+						endif;
 						?>
 
 						<?php

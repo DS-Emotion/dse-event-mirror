@@ -4,7 +4,7 @@ Tags: events, eventbrite, sync, calendar, mirror
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.11.1
+Stable tag: 0.12.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -42,6 +42,15 @@ The schedule uses WP-Cron by default. For reliable timing on quiet sites, point
 a real server cron job at wp-cron.php (see the setup guide).
 
 == Changelog ==
+
+= 0.12.0 =
+* New: "Event location" setting (Settings > Display) to show or hide the event location across the Events page, cards, list rows and blocks. On by default. Event structured data keeps the location either way.
+* New: `paginate="yes"` option for [event_mirror], adding numbered paging (limit becomes the per-page count). Paging links jump back to the listing.
+* New: list view groups events under month headings.
+* Change: grid cards now show a short description and put the day, date and time range on separate lines.
+* Change: event titles typed in all caps are shown in sentence case.
+* Change: the front-end stylesheet is now always enqueued, so cards style the same on every page.
+* Change: the month calendar sits in a horizontal scroller on small screens, and is hidden from the How to Display guide unless EVMR_ENABLE_CALENDAR is defined.
 
 = 0.11.1 =
 * Change: on mobile, the list view now shows each event's image on top of the details (was below).
