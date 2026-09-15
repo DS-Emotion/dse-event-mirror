@@ -318,7 +318,7 @@ class EVMR_Shortcode {
 					<p class="evmr-card__time"><?php echo esc_html( $time ); ?></p>
 				<?php endif; ?>
 				<?php if ( $venue && $show_venue ) : ?>
-					<p class="evmr-card__venue"><?php echo esc_html( $venue ); ?></p>
+					<p class="evmr-card__venue"><span class="evmr-card__venue-label"><?php esc_html_e( 'Location:', 'event-mirror' ); ?></span> <?php echo esc_html( $venue ); ?></p>
 				<?php endif; ?>
 				<?php if ( $desc ) : ?>
 					<p class="evmr-card__desc"><?php echo esc_html( $desc ); ?></p>
@@ -383,7 +383,7 @@ class EVMR_Shortcode {
 				<?php endif; ?>
 				<h3 class="evmr-list-item__title"><?php echo esc_html( self::sentence_case( get_the_title( $post_id ) ) ); ?></h3>
 				<?php if ( $venue && EVMR_Settings::show_location() ) : ?>
-					<p class="evmr-card__venue"><?php echo esc_html( $venue ); ?></p>
+					<p class="evmr-card__venue"><span class="evmr-card__venue-label"><?php esc_html_e( 'Location:', 'event-mirror' ); ?></span> <?php echo esc_html( $venue ); ?></p>
 				<?php endif; ?>
 				<?php if ( $desc ) : ?>
 					<p class="evmr-card__desc"><?php echo esc_html( $desc ); ?></p>

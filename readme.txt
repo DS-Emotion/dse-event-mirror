@@ -44,7 +44,7 @@ a real server cron job at wp-cron.php (see the setup guide).
 == Changelog ==
 
 = 0.12.0 =
-* New: "Event location" setting (Settings > Display) to show or hide the event location across the Events page, cards, list rows and blocks. On by default. Event structured data keeps the location either way.
+* New: "Event location" setting (Settings > Display) to show or hide the event location across the Events page, cards, list rows and blocks. On by default, and shown as "Location: <venue>". Event structured data keeps the location either way.
 * New: `paginate="yes"` option for [event_mirror], adding numbered paging (limit becomes the per-page count). Paging links jump back to the listing.
 * New: list view groups events under month headings.
 * Change: grid cards now show a short description and put the day, date and time range on separate lines.
