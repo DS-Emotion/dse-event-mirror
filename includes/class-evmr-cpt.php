@@ -181,6 +181,15 @@ class EVMR_CPT {
 			// Eventbrite and shown read-only (see add_description_box()).
 			'supports'      => array( 'title', 'thumbnail', 'excerpt' ),
 			'taxonomies'    => array( self::TAXONOMY, self::TAG_TAXONOMY ),
+			// Events are mirrored from Eventbrite, never written by hand. Removing
+			// the create capability hides "Add New Event" from the admin menu, the
+			// list table and the +New admin bar item, and blocks REST creation.
+			// Syncing is unaffected: wp_insert_post() does not check capabilities.
+			// Editing and deleting existing events still work, so the Auto Clean-Up
+			// exclusion and category assignments are untouched. Filterable below,
+			// so a site that does want manual events can restore the default.
+			'capabilities'  => array( 'create_posts' => 'do_not_allow' ),
+			'map_meta_cap'  => true,
 		);
 
 		/**
